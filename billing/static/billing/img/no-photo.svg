@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <!-- Soft background gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    
+    <!-- Primary/brand accent gradient for the icon -->
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" rx="12" fill="url(#bgGrad)"/>
+
+  <!-- Stylized modern camera/image illustration -->
+  <g transform="translate(140, 60)">
+    <!-- Outer camera body -->
+    <rect x="10" y="30" width="100" height="80" rx="16" fill="white" stroke="#cbd5e1" stroke-width="2"/>
+    
+    <!-- Camera lens ring outer -->
+    <circle cx="60" cy="70" r="26" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+    
+    <!-- Camera lens inner -->
+    <circle cx="60" cy="70" r="18" fill="url(#iconGrad)"/>
+    
+    <!-- Lens reflection -->
+    <circle cx="54" cy="64" r="5" fill="white" opacity="0.4"/>
+    
+    <!-- Camera flash/sensor -->
+    <circle cx="94" cy="46" r="5" fill="#94a3b8"/>
+    
+    <!-- Top lens structure / prism -->
+    <path d="M40 30 L48 16 C50 13, 70 13, 72 16 L80 30" fill="white" stroke="#cbd5e1" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M42 30 L49 18 C50 16, 70 16, 71 18 L78 30" fill="#f1f5f9"/>
+  </g>
+
+  <!-- Friendly label text -->
+  <text x="200" y="195" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#475569">
+    Sin imagen
+  </text>
+  <text x="200" y="217" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#94a3b8">
+    No hay foto disponible para este producto
+  </text>
+</svg>

@@ -1,0 +1,503 @@
+{% extends 'billing/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --bg-light: #f8fafc;
+    --border-color: #e2e8f0;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --dark-bg: #1e293b;
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  }
+
+  .premium-card {
+    border: none;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+  }
+
+  .premium-card-header {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    padding: 1.5rem 2rem;
+    border-bottom: none;
+  }
+
+  .premium-card-body {
+    padding: 2rem;
+  }
+
+  .form-label-premium {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.4rem;
+    font-size: 0.875rem;
+    letter-spacing: 0.1px;
+    display: inline-block;
+  }
+
+  .form-control-premium, .form-select-premium {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease-in-out;
+    background-color: #f8fafc;
+    color: #1e293b;
+  }
+
+  .form-control-premium:focus, .form-select-premium:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    background-color: #ffffff;
+    outline: none;
+  }
+
+  .form-control-premium[readonly], .form-control-premium:disabled {
+    background-color: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+  }
+
+  /* Table styling */
+  .details-table thead {
+    background-color: #1e293b;
+    color: #ffffff;
+  }
+
+  .details-table th {
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border: none;
+  }
+
+  .details-table td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+  }
+
+  .total-row {
+    background-color: #fef9c3 !important; /* light yellow */
+    font-weight: bold;
+  }
+
+  .btn-premium-save {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-premium-save:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
+  .btn-premium-cancel {
+    background-color: #ffffff;
+    border: 2px solid #cbd5e1;
+    color: #475569;
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-premium-cancel:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+  }
+
+  .btn-delete-row {
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    background-color: #fef2f2;
+    transition: all 0.2s ease;
+  }
+
+  .btn-delete-row:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+  }
+
+  .badge-new {
+    background-color: #f59e0b;
+    color: #1e293b;
+    font-weight: bold;
+    font-size: 0.8rem;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+  }
+</style>
+
+<div class="row justify-content-center">
+  <div class="col-xl-11 col-lg-12">
+    <div class="premium-card">
+      <!-- Encabezado del Formulario -->
+      <div class="premium-card-header d-flex justify-content-between align-items-center text-white">
+        <div>
+          <h4 class="mb-1 fw-bold text-white">
+            {% if form.instance.pk %}
+              <i class="bi bi-pencil-square me-2 text-warning"></i>Editar Factura
+            {% else %}
+              <i class="bi bi-plus-circle me-2 text-warning"></i>Crear Factura
+            {% endif %}
+          </h4>
+          <p class="text-white-50 mb-0 small">Gestión y registro de facturación de ventas</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          {% if form.instance.pk %}
+            <span class="badge badge-new">#{{ form.instance.pk }}</span>
+          {% else %}
+            <span class="badge badge-new">New</span>
+          {% endif %}
+          <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-light btn-sm rounded-pill">
+            <i class="bi bi-arrow-left"></i> Volver al listado
+          </a>
+        </div>
+      </div>
+
+      <!-- Cuerpo del Formulario -->
+      <div class="premium-card-body">
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {% for error in form.non_field_errors %}
+              {{ error }}
+            {% endfor %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endif %}
+
+        <form method="post" novalidate id="invoice-form">
+          {% csrf_token %}
+
+          <!-- Cabecera de la Factura: Cliente y Fecha -->
+          <div class="row g-4 mb-4 pb-4 border-bottom">
+            <!-- Cliente -->
+            <div class="col-md-6">
+              <label for="{{ form.customer.id_for_label }}" class="form-label form-label-premium">
+                {{ form.customer.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.customer }}
+              {% if form.customer.errors %}
+                <div class="invalid-feedback d-block">
+                  {% for error in form.customer.errors %}{{ error }}{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Fecha (Solo Lectura) -->
+            <div class="col-md-6">
+              <label class="form-label form-label-premium">Fecha</label>
+              <input type="text" class="form-control form-control-premium bg-light text-muted border-secondary-subtle" readonly 
+                     value="{% if form.instance.pk %}{{ form.instance.invoice_date|date:'d/m/Y' }}{% else %}{% now 'd/m/Y' %}{% endif %}">
+              <div class="form-text text-muted small">Se registra automáticamente con la fecha de hoy.</div>
+            </div>
+          </div>
+
+          <!-- Líneas de Detalle -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark mb-0">Detalles de la Factura</h5>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 rounded" id="btn-add-row">
+              <i class="bi bi-plus-lg"></i> Add product
+            </button>
+          </div>
+
+          {{ formset.management_form }}
+
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle details-table" id="details-table">
+              <thead>
+                <tr>
+                  <th style="width: 45%;">Product</th>
+                  <th style="width: 15%;" class="text-center">Quantity</th>
+                  <th style="width: 15%;" class="text-end">Unit Price</th>
+                  <th style="width: 15%;" class="text-end">Subtotal</th>
+                  <th style="width: 10%;" class="text-center">Delete</th>
+                </tr>
+              </thead>
+              <tbody id="details-tbody">
+                <!-- Template Row (Hidden) -->
+                <tr id="empty-row" style="display: none;">
+                  <td>
+                    {{ formset.empty_form.product }}
+                    <div class="stock-warning text-warning small mt-1 d-none">
+                      <i class="bi bi-exclamation-triangle"></i> Stock disponible: <span class="stock-limit">0</span>
+                    </div>
+                  </td>
+                  <td>
+                    {{ formset.empty_form.quantity }}
+                  </td>
+                  <td>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light border-2 border-end-0" style="border-radius: 10px 0 0 10px;">$</span>
+                      {{ formset.empty_form.unit_price }}
+                    </div>
+                  </td>
+                  <td class="text-end fw-semibold row-subtotal-display" style="padding-right: 1.5rem;">$0.00</td>
+                  <td class="text-center">
+                    <div class="d-none">
+                      {{ formset.empty_form.DELETE }}
+                    </div>
+                    <button type="button" class="btn btn-delete-row btn-sm rounded-circle p-1">
+                      <i class="bi bi-x" style="font-size: 1.25rem; line-height: 1;"></i>
+                    </button>
+                  </td>
+                  {{ formset.empty_form.id }}
+                </tr>
+
+                <!-- Existing / Initial Rows -->
+                {% for detail_form in formset %}
+                <tr class="detail-row">
+                  <td>
+                    {{ detail_form.product }}
+                    <div class="stock-warning text-warning small mt-1 d-none">
+                      <i class="bi bi-exclamation-triangle"></i> Stock disponible: <span class="stock-limit">0</span>
+                    </div>
+                    {% if detail_form.product.errors %}
+                      <div class="invalid-feedback d-block">
+                        {% for error in detail_form.product.errors %}{{ error }}{% endfor %}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {{ detail_form.quantity }}
+                    {% if detail_form.quantity.errors %}
+                      <div class="invalid-feedback d-block">
+                        {% for error in detail_form.quantity.errors %}{{ error }}{% endfor %}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light border-2 border-end-0" style="border-radius: 10px 0 0 10px;">$</span>
+                      {{ detail_form.unit_price }}
+                    </div>
+                    {% if detail_form.unit_price.errors %}
+                      <div class="invalid-feedback d-block">
+                        {% for error in detail_form.unit_price.errors %}{{ error }}{% endfor %}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td class="text-end fw-semibold row-subtotal-display" style="padding-right: 1.5rem;">$0.00</td>
+                  <td class="text-center">
+                    <div class="d-none">
+                      {{ detail_form.DELETE }}
+                    </div>
+                    <button type="button" class="btn btn-delete-row btn-sm rounded-circle p-1">
+                      <i class="bi bi-x" style="font-size: 1.25rem; line-height: 1;"></i>
+                    </button>
+                  </td>
+                  {{ detail_form.id }}
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="text-end fw-semibold">Subtotal:</td>
+                  <td class="text-end fw-semibold" style="padding-right: 1.5rem;" id="invoice-subtotal">$0.00</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td colspan="3" class="text-end fw-semibold">IVA (15%):</td>
+                  <td class="text-end fw-semibold" style="padding-right: 1.5rem;" id="invoice-tax">$0.00</td>
+                  <td></td>
+                </tr>
+                <tr class="total-row">
+                  <td colspan="3" class="text-end fs-5">TOTAL:</td>
+                  <td class="text-end fs-5 text-dark" style="padding-right: 1.5rem;" id="invoice-total">$0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="row mt-4 pt-3 border-top">
+            <div class="col-12 d-flex gap-3 justify-content-start">
+              <button type="submit" class="btn btn-premium-save">
+                {% if form.instance.pk %}Actualizar Factura{% else %}Create Invoice{% endif %}
+              </button>
+              <a href="{% url 'billing:invoice_list' %}" class="btn btn-premium-cancel d-flex align-items-center justify-content-center">
+                Cancel
+              </a>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Product Data JSON -->
+<script id="products-data" type="application/json">
+  {{ products_json|safe }}
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const productsData = JSON.parse(document.getElementById('products-data').textContent);
+    const tbody = document.getElementById('details-tbody');
+    const emptyRowTemplate = document.getElementById('empty-row');
+    const addRowBtn = document.getElementById('btn-add-row');
+    const totalFormsInput = document.getElementById('id_details-TOTAL_FORMS');
+
+    // Mapeo rápido de ID de producto a sus datos para facilitar búsquedas
+    const productsMap = {};
+    productsData.forEach(p => {
+      productsMap[p.id] = p;
+    });
+
+    // Función para recalcular los totales de una fila y de toda la factura
+    function calculateTotals() {
+      let subtotalSum = 0;
+      const rows = tbody.querySelectorAll('.detail-row');
+
+      rows.forEach(row => {
+        // Ignorar filas que están marcadas para eliminación o el template vacío
+        if (row.style.display === 'none') {
+          return;
+        }
+
+        const productSelect = row.querySelector('.detail-product');
+        const qtyInput = row.querySelector('.detail-quantity');
+        const priceInput = row.querySelector('.detail-price');
+        const subtotalDisplay = row.querySelector('.row-subtotal-display');
+        const warningDiv = row.querySelector('.stock-warning');
+        const limitSpan = row.querySelector('.stock-limit');
+
+        const productId = productSelect.value;
+        let price = parseFloat(priceInput.value) || 0;
+        let quantity = parseInt(qtyInput.value) || 0;
+
+        // Si se selecciona un producto y el precio está vacío/es cero, asignamos el precio del catálogo
+        if (productId && productsMap[productId]) {
+          const product = productsMap[productId];
+          
+          // Validación de stock
+          const availableStock = product.stock;
+          if (quantity > availableStock) {
+            warningDiv.classList.remove('d-none');
+            limitSpan.textContent = availableStock;
+            qtyInput.classList.add('border-warning');
+          } else {
+            warningDiv.classList.add('d-none');
+            qtyInput.classList.remove('border-warning');
+          }
+        } else {
+          warningDiv.classList.add('d-none');
+          qtyInput.classList.remove('border-warning');
+        }
+
+        const rowSubtotal = price * quantity;
+        subtotalDisplay.textContent = '$' + rowSubtotal.toFixed(2);
+        subtotalSum += rowSubtotal;
+      });
+
+      const tax = subtotalSum * 0.15;
+      const total = subtotalSum + tax;
+
+      document.getElementById('invoice-subtotal').textContent = '$' + subtotalSum.toFixed(2);
+      document.getElementById('invoice-tax').textContent = '$' + tax.toFixed(2);
+      document.getElementById('invoice-total').textContent = '$' + total.toFixed(2);
+    }
+
+    // Configura los event listeners para una fila específica
+    function setupRowEvents(row) {
+      const productSelect = row.querySelector('.detail-product');
+      const qtyInput = row.querySelector('.detail-quantity');
+      const priceInput = row.querySelector('.detail-price');
+      const deleteBtn = row.querySelector('.btn-delete-row');
+      const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+
+      // Al cambiar el producto, actualizamos su precio unitario
+      productSelect.addEventListener('change', function() {
+        const productId = this.value;
+        if (productId && productsMap[productId]) {
+          priceInput.value = productsMap[productId].unit_price.toFixed(2);
+        } else {
+          priceInput.value = '';
+        }
+        calculateTotals();
+      });
+
+      // Al cambiar la cantidad, recalculamos
+      qtyInput.addEventListener('input', calculateTotals);
+
+      // Eliminar fila
+      deleteBtn.addEventListener('click', function() {
+        if (deleteCheckbox) {
+          // Si es una fila existente en base de datos, la marcamos para eliminar y la ocultamos
+          deleteCheckbox.checked = true;
+          row.style.display = 'none';
+          row.classList.remove('detail-row'); // Dejamos de contarla como fila de cálculo
+        } else {
+          // Si es una fila nueva, la eliminamos físicamente del DOM
+          row.remove();
+        }
+        calculateTotals();
+      });
+    }
+
+    // Botón Agregar Fila
+    addRowBtn.addEventListener('click', function() {
+      const formIdx = parseInt(totalFormsInput.value);
+      
+      // Clonamos el template
+      const clone = emptyRowTemplate.cloneNode(true);
+      clone.removeAttribute('id');
+      clone.style.display = '';
+      clone.classList.add('detail-row');
+
+      // Reemplazamos el prefijo __prefix__ con el índice correspondiente
+      const regex = /__prefix__/g;
+      clone.innerHTML = clone.innerHTML.replace(regex, formIdx);
+
+      // Agregamos al final del listado
+      tbody.appendChild(clone);
+
+      // Incrementamos la cantidad de formularios totales
+      totalFormsInput.value = formIdx + 1;
+
+      // Inicializar eventos del clon
+      setupRowEvents(clone);
+      calculateTotals();
+    });
+
+    // Configurar filas iniciales (existentes)
+    const initialRows = tbody.querySelectorAll('.detail-row');
+    initialRows.forEach(row => {
+      setupRowEvents(row);
+      
+      // Cargar precio por defecto si es una creación y no está definido
+      const productSelect = row.querySelector('.detail-product');
+      const priceInput = row.querySelector('.detail-price');
+      if (productSelect.value && !priceInput.value) {
+        const prod = productsMap[productSelect.value];
+        if (prod) {
+          priceInput.value = prod.unit_price.toFixed(2);
+        }
+      }
+    });
+
+    // Cálculo inicial al cargar
+    calculateTotals();
+  });
+</script>
+{% endblock %}

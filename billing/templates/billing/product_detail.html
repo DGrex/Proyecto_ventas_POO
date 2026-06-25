@@ -1,0 +1,130 @@
+{% extends 'billing/base.html' %}
+{% block title %}Detalle de Producto - {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-2">
+  <!-- Cabecera de Navegación Rápida -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'billing:home' %}" class="text-decoration-none">Inicio</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'billing:product_list' %}" class="text-decoration-none">Productos</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    {# ── COLUMNA 1: IMAGEN DEL PRODUCTO ──────────────────────────────── #}
+    <div class="col-md-5 col-lg-4">
+      <div class="sticky-top" style="top: 20px;">
+        <div class="card shadow-sm border-0 overflow-hidden">
+          <img src="{{ product.get_photo_url }}" 
+               class="img-fluid w-100 rounded border" 
+               style="object-fit: cover; max-height: 400px; min-height: 300px;" 
+               alt="{{ product.name }}">
+        </div>
+      </div>
+    </div>
+
+    {# ── COLUMNA 2: DETALLES DEL PRODUCTO ────────────────────────────── #}
+    <div class="col-md-7 col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <!-- Cabecera de tarjeta: Nombre y Estado -->
+          <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+            <div>
+              <span class="text-muted text-uppercase fs-7 fw-bold tracking-wider">Detalles del Producto</span>
+              <h2 class="card-title fw-bold text-dark mt-1 mb-0">{{ product.name }}</h2>
+            </div>
+            <div>
+              {% if product.is_active %}
+                <span class="badge bg-success px-3 py-2 fs-7 rounded-pill"><i class="bi bi-check-circle-fill"></i> Activo</span>
+              {% else %}
+                <span class="badge bg-secondary px-3 py-2 fs-7 rounded-pill"><i class="bi bi-x-circle-fill"></i> Inactivo</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Precio destacado -->
+          <div class="mb-4 bg-light p-3 rounded d-flex align-items-center justify-content-between">
+            <div>
+              <span class="text-muted small d-block">Precio de Venta</span>
+              <span class="fs-2 fw-bold text-primary">${{ product.unit_price }}</span>
+            </div>
+            <div>
+              <span class="text-muted small d-block text-end">Disponibilidad en Bodega</span>
+              <div class="text-end mt-1">
+                {% if product.stock <= 5 %}
+                  <span class="badge bg-danger px-3 py-2 fs-6"><i class="bi bi-exclamation-triangle-fill"></i> {{ product.stock }} unidades (Crítico)</span>
+                {% elif product.stock <= 20 %}
+                  <span class="badge bg-warning text-dark px-3 py-2 fs-6"><i class="bi bi-exclamation-circle-fill"></i> {{ product.stock }} unidades (Bajo)</span>
+                {% else %}
+                  <span class="badge bg-success px-3 py-2 fs-6"><i class="bi bi-box-seam-fill"></i> {{ product.stock }} unidades (Normal)</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Información General estructurada -->
+          <h5 class="fw-bold text-secondary mb-3 border-bottom pb-2">Información de Clasificación</h5>
+          <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+              <div class="p-2 border rounded bg-white shadow-xs">
+                <span class="text-muted small d-block"><i class="bi bi-tag-fill"></i> Marca</span>
+                <span class="fw-semibold text-dark">{{ product.brand.name }}</span>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="p-2 border rounded bg-white shadow-xs">
+                <span class="text-muted small d-block"><i class="bi bi-grid-fill"></i> Grupo / Categoría</span>
+                <span class="fw-semibold text-dark">{{ product.group.name }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Proveedores -->
+          <h5 class="fw-bold text-secondary mb-3 border-bottom pb-2">Proveedores Asociados</h5>
+          <div class="mb-4">
+            {% for supplier in product.suppliers.all %}
+              <span class="badge bg-info text-dark fs-7 me-1 mb-1 p-2 rounded shadow-xs">
+                <i class="bi bi-building"></i> {{ supplier.name }}
+              </span>
+            {% empty %}
+              <p class="text-muted fst-italic mb-0"><i class="bi bi-info-circle"></i> No hay proveedores asociados a este producto.</p>
+            {% endfor %}
+          </div>
+
+          <!-- Descripción -->
+          <h5 class="fw-bold text-secondary mb-3 border-bottom pb-2">Descripción</h5>
+          <div class="mb-4">
+            {% if product.description %}
+              <p class="text-muted bg-light p-3 rounded" style="white-space: pre-line;">{{ product.description }}</p>
+            {% else %}
+              <p class="text-muted fst-italic"><i class="bi bi-chat-left-dots"></i> Sin descripción provista.</p>
+            {% endif %}
+          </div>
+
+          <!-- Fechas de auditoría -->
+          <div class="text-muted small d-flex justify-content-between mb-4 border-top pt-3 flex-wrap gap-2">
+            <span><strong>Creado:</strong> {{ product.created_at|date:"d/m/Y H:i" }}</span>
+            <span><strong>Última actualización:</strong> {{ product.updated_at|date:"d/m/Y H:i" }}</span>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="d-flex gap-2 justify-content-end border-top pt-3 flex-wrap">
+            <a href="{% url 'billing:product_list' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i> Volver a la Lista
+            </a>
+            <a href="{% url 'billing:product_update' product.pk %}" class="btn btn-warning">
+              <i class="bi bi-pencil-square"></i> Editar Producto
+            </a>
+            <a href="{% url 'billing:product_delete' product.pk %}" class="btn btn-danger">
+              <i class="bi bi-trash-fill"></i> Eliminar
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
