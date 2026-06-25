@@ -13,6 +13,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from .models import *
+from purchasing.models import Purchase
 from .forms import SignUpForm, BrandForm, InvoiceForm, InvoiceDetailFormSet, ProductForm, CustomerForm
 from decimal import Decimal
 from shared.mixins import StaffRequiredMixin, ExportMixin
@@ -37,7 +38,9 @@ def home(request):
         'total_products': Product.objects.count(),
         'total_customers': Customer.objects.count(),
         'total_invoices': Invoice.objects.count(),
+        'total_purchases': Purchase.objects.count(),
         'recent_invoices': Invoice.objects.all()[:5],
+        'recent_purchases': Purchase.objects.select_related('supplier').all()[:5],
         'low_stock': Product.objects.filter(stock__lte=5, is_active=True),
     }
     return render(request, 'billing/home.html', context)

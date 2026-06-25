@@ -1,30 +1,51 @@
 {% extends 'billing/base.html' %}
-{% block title %}Login{% endblock %}
+{% block title %}Iniciar sesión{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-5">
-    <div class="card shadow">
-      <div class="card-header bg-dark text-white"><h4>Iniciar sesión</h4></div>
-      <div class="card-body">
-        <form method="post">
-          {% csrf_token %}
-          {% for field in form %}
-          <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            <input type="{{ field.field.widget.input_type }}"
-                   name="{{ field.html_name }}"
-                   class="form-control {% if field.errors %}is-invalid{% endif %}"
-                   value="{{ field.value|default_if_none:'' }}">
-            {% for error in field.errors %}
-            <div class="invalid-feedback">{{ error }}</div>
-            {% endfor %}
+<div class="auth-page">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10 col-xl-9">
+        <div class="row g-0 auth-card">
+          <div class="col-md-5 auth-side-panel d-none d-md-flex">
+            <div>
+              <div class="auth-hero-icon mb-3"><i class="bi bi-lock-fill"></i></div>
+              <h5>Bienvenido de nuevo</h5>
+              <p class="mb-4">Accede a tu panel para administrar ventas, compras y stock con rapidez.</p>
+              <ul class="list-unstyled mb-0 text-muted">
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Acceso seguro y confiable</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Control total de inventario</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Visión centralizada de negocios</li>
+              </ul>
+            </div>
           </div>
-          {% endfor %}
-          <button type="submit" class="btn btn-primary w-100">Iniciar sesión</button>
-        </form>
-        <p class="mt-3 text-center">
-        No tienes cuenta? <a href="{% url 'billing:signup' %}">Registrarse</a>
-        </p>
+          <div class="col-md-7 bg-white">
+            <div class="card-body">
+              <div class="mb-4">
+                <h4 class="mb-1">Inicia sesión en tu cuenta</h4>
+                <p class="text-muted auth-footer-text">Introduce tu usuario y contraseña para continuar.</p>
+              </div>
+              <form method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3 auth-form-group">
+                  <label class="form-label">{{ field.label }}</label>
+                  <input type="{{ field.field.widget.input_type }}"
+                         name="{{ field.html_name }}"
+                         class="form-control {% if field.errors %}is-invalid{% endif %}"
+                         value="{{ field.value|default_if_none:'' }}">
+                  {% for error in field.errors %}
+                  <div class="invalid-feedback">{{ error }}</div>
+                  {% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary w-100 btn-lg">Iniciar sesión</button>
+              </form>
+              <p class="mt-4 text-center auth-footer-text">
+                ¿No tienes cuenta? <a class="auth-action-link" href="{% url 'billing:signup' %}">Regístrate</a>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
