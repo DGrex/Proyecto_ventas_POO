@@ -245,7 +245,7 @@ def purchase_detail(request, pk):
 
 
 @login_required
-@group_required('Administrador')
+@group_required('Administrador', 'Analista de Compras')
 @audit_action('DELETE_PURCHASE')
 def purchase_delete(request, pk):
     """Elimina una compra y todos sus detalles (CASCADE), devolviendo el stock."""

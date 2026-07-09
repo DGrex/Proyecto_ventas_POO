@@ -493,12 +493,8 @@ class CustomerViewsTest(TestCase):
         self.assertTrue(Customer.objects.filter(pk=self.customer.pk).exists())
 
     def test_customer_delete_view_post_by_staff(self):
-        self.user = User.objects.get(username='customeruser')
-        self.user.is_staff = True
-        from django.contrib.auth.models import Group
-        admin_group, _ = Group.objects.get_or_create(name='Administrador')
-        self.user.groups.add(admin_group)
-        self.user.save()
+        # El usuario 'customeruser' ya tiene el rol 'Vendedor' del setUp,
+        # que ahora es suficiente para eliminar clientes gracias al StaffRequiredMixin actualizado
         response = self.client.post(reverse('billing:customer_delete', kwargs={'pk': self.customer.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Customer.objects.filter(pk=self.customer.pk).exists())

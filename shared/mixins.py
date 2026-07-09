@@ -25,10 +25,16 @@ class StaffRequiredMixin:
     staff_error_message = 'You do not have permission to perform this action. Staff access required.'
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            messages.error(request, self.staff_error_message)
-            return redirect(self.staff_redirect_url)
-        return super().dispatch(request, *args, **kwargs)
+        # 1. El superusuario, staff o miembro del grupo Administrador siempre pasa
+        if request.user.is_superuser or request.user.is_staff or request.user.groups.filter(name='Administrador').exists():
+            return super().dispatch(request, *args, **kwargs)
+        
+        # 2. Si la vista define group_required y el usuario pertenece a alguno de ellos, pasa
+        if hasattr(self, 'group_required') and request.user.groups.filter(name__in=self.group_required).exists():
+            return super().dispatch(request, *args, **kwargs)
+
+        messages.error(request, self.staff_error_message)
+        return redirect(self.staff_redirect_url)
 
 
 class ExportMixin:

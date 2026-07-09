@@ -17,7 +17,7 @@ from purchasing.models import Purchase
 from .forms import SignUpForm, BrandForm, InvoiceForm, InvoiceDetailFormSet, ProductForm, CustomerForm
 from decimal import Decimal
 from shared.mixins import StaffRequiredMixin, ExportMixin, GroupRequiredMixin
-from shared.decorators import audit_action
+from shared.decorators import audit_action, group_required
 
 # === REGISTRO ===
 class SignUpView(CreateView):
@@ -85,6 +85,7 @@ class BrandListView(LoginRequiredMixin,ExportMixin,GroupRequiredMixin, ListView)
 
 
 @login_required
+@group_required('Administrador', 'Analista de Compras')
 @audit_action('CREATE_BRAND')
 def brand_create(request):
     if request.method == 'POST':
@@ -99,6 +100,7 @@ def brand_create(request):
 
 
 @login_required
+@group_required('Administrador', 'Analista de Compras')
 @audit_action('UPDATE_BRAND')
 def brand_update(request, pk):
     brand = get_object_or_404(Brand, pk=pk)
@@ -114,6 +116,7 @@ def brand_update(request, pk):
 
 
 @login_required
+@group_required('Administrador', 'Analista de Compras')
 @audit_action('DELETE_BRAND')
 def brand_delete(request, pk):
     brand = get_object_or_404(Brand, pk=pk)
@@ -323,7 +326,7 @@ class InvoiceDetailView(LoginRequiredMixin, GroupRequiredMixin, DetailView):
 
 @method_decorator(audit_action('DELETE_INVOICE'), name='dispatch')
 class InvoiceDeleteView(LoginRequiredMixin, GroupRequiredMixin, StaffRequiredMixin, DeleteView):
-    group_required = ['Administrador']
+    group_required = ['Administrador', 'Vendedor']
     model = Invoice
     template_name = 'billing/invoice_confirm_delete.html'
     success_url = reverse_lazy('billing:invoice_list')
@@ -381,7 +384,7 @@ class ProductGroupUpdateView(LoginRequiredMixin,GroupRequiredMixin, UpdateView):
     group_required = ['Administrador', 'Analista de Compras']
     model = ProductGroup; fields = ['name','is_active']; template_name = 'billing/productgroup_form.html'; success_url = reverse_lazy('billing:productgroup_list')
 class ProductDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, DeleteView):
-    group_required = ['Administrador']
+    group_required = ['Administrador', 'Analista de Compras']
     model = Product; template_name = 'billing/product_confirm_delete.html'; success_url = reverse_lazy('billing:product_list'); staff_redirect_url = '/products/'
 
 
@@ -434,7 +437,7 @@ class SupplierUpdateView(LoginRequiredMixin,GroupRequiredMixin, UpdateView):
     group_required = ['Administrador', 'Analista de Compras']
     model = Supplier; fields = ['name','contact_name','email','phone','address','is_active']; template_name = 'billing/supplier_form.html'; success_url = reverse_lazy('billing:supplier_list')
 class SupplierDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, DeleteView):
-    group_required = ['Administrador']
+    group_required = ['Administrador', 'Analista de Compras']
     model = Supplier; template_name = 'billing/supplier_confirm_delete.html'; success_url = reverse_lazy('billing:supplier_list'); staff_redirect_url = '/suppliers/'
 
 
@@ -606,7 +609,7 @@ class ProductDetailView(LoginRequiredMixin,GroupRequiredMixin, DetailView):
     template_name = 'billing/product_detail.html'
     context_object_name = 'product'
 class ProductGroupDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, DeleteView):
-    group_required = ['Administrador']
+    group_required = ['Administrador', 'Analista de Compras']
     model = ProductGroup; template_name = 'billing/productgroup_confirm_delete.html'; success_url = reverse_lazy('billing:productgroup_list'); staff_redirect_url = '/groups/'
 
 # === CUSTOMER (CBV) ===
@@ -678,7 +681,7 @@ class CustomerDetailView(LoginRequiredMixin,GroupRequiredMixin, DetailView):
         return ctx
 
 class CustomerDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, DeleteView):
-    group_required = ['Administrador']
+    group_required = ['Administrador', 'Vendedor']
     model = Customer
     template_name = 'billing/customer_confirm_delete.html'
     success_url = reverse_lazy('billing:customer_list')

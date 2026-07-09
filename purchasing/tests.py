@@ -263,12 +263,7 @@ class PurchasingViewsTests(TestCase):
         self.assertEqual(self.product.stock, stock_before_update + 3)
 
     def test_purchase_delete_view_post(self):
-        # Dar rol Administrador para permitir la eliminación
-        from django.contrib.auth.models import Group
-        admin_group, _ = Group.objects.get_or_create(name='Administrador')
-        self.user.groups.add(admin_group)
-        self.user.save()
-
+        # El usuario ya tiene el rol 'Analista de Compras' del setUp, suficiente para eliminar
         # Crear una compra para eliminar
         purchase = Purchase.objects.create(
             supplier=self.supplier,
