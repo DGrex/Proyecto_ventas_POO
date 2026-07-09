@@ -1,78 +1,92 @@
-# DENIS GOYES
 # TecnoStock S.A. — Sistema de Ventas y Compras
 
-## Descripción General
+## Descripción general
 
-Este proyecto Django integra dos módulos principales:
-- **`billing`**: Sistema de ventas, facturación a clientes, y gestión de catálogo (marcas, grupos, proveedores, productos, clientes).
-- **`purchasing`**: Módulo de compras y reabastecimiento de inventario desde proveedores.
+Este proyecto Django integra dos aplicaciones principales:
+
+- **`billing`**: gestión de ventas, facturación a clientes y catálogo de marcas, grupos, proveedores, productos y clientes.
+- **`purchasing`**: módulo de compras para reabastecer inventario desde proveedores.
+
+El diseño busca mantener un catálogo único y coherente entre ventas y compras, usando los mismos modelos de proveedores y productos en ambas aplicaciones.
 
 ---
 
-## Cómo `purchasing` reutiliza `Supplier` y `Product` de `billing`
+## Arquitectura principal
 
-### La idea central: un solo catálogo, dos módulos de negocio
+### Reutilización de modelos entre apps
 
-En lugar de duplicar la información de proveedores o productos en la app `purchasing`, el módulo de compras **importa directamente** los modelos de `billing`:
+La app `purchasing` reutiliza directamente los modelos `Supplier` y `Product` definidos en `billing`:
 
 ```python
 # purchasing/models.py
-from billing.models import Supplier, Product  # Reutilizamos modelos de billing
+from billing.models import Supplier, Product
 ```
 
-Esto tiene implicaciones importantes:
+Esto evita duplicar los datos y permite que las operaciones de ventas y compras compartan el mismo stock y los mismos proveedores.
 
-| Aspecto | Detalle |
-|---|---|
-| **Sin duplicación de datos** | Los mismos `Supplier` y `Product` que se usan en ventas se usan en compras. No hay dos tablas de proveedores ni dos tablas de productos. |
-| **Relaciones FK entre apps** | `Purchase.supplier` apunta a `billing.Supplier`, y `PurchaseDetail.product` apunta a `billing.Product`. Django gestiona FK entre apps sin problema. |
-| **on_delete coherente** | `PROTECT` en `supplier` y `product` (no se puede borrar un proveedor o producto con compras asociadas); `CASCADE` en los detalles (si se borra la compra, caen sus líneas). |
-| **Stock compartido** | Al guardar un `PurchaseDetail`, la señal `save()` **suma** la cantidad al `Product.stock` de `billing`. Al eliminar, la señal `post_delete` **resta** esa cantidad. El stock es siempre el mismo campo en la misma tabla. |
-| **Precio vs. Costo** | `billing` usa `unit_price` (precio de venta al cliente); `purchasing` usa `unit_cost` (costo de compra al proveedor). Misma estructura de datos, distinto significado de negocio. |
+### Beneficios clave
 
-### Estructura de archivos relevante
+- **Datos centralizados**: `Supplier` y `Product` existen una sola vez en la base de datos.
+- **Relaciones entre apps**: `Purchase.supplier` referencia a `billing.Supplier` y `PurchaseDetail.product` referencia a `billing.Product`.
+- **Gestión de stock única**: el stock se actualiza desde el módulo de compras usando el campo `Product.stock` en `billing`.
+- **Distinción clara de precios**: `billing` usa `unit_price` para ventas; `purchasing` usa `unit_cost` para compras.
+
+---
+
+## Funcionamiento del módulo de compras
+
+### Flujo de una compra
+
+1. Se selecciona un **Proveedor** existente.
+2. Se agrega uno o varios **Productos** con cantidad y precio de compra.
+3. Al guardar la compra, se calculan subtotal, IVA y total.
+4. El stock del producto se incrementa automáticamente.
+5. Si se elimina una compra, el stock asociado se ajusta hacia abajo.
+
+### Relaciones y comportamiento
+
+- `Purchase.supplier`: `ForeignKey` a `billing.Supplier` con `PROTECT`.
+- `PurchaseDetail.product`: `ForeignKey` a `billing.Product` con `PROTECT`.
+- `PurchaseDetail` usa `unit_cost` para registrar el costo de compra.
+- Los productos y proveedores se crean y administran desde `billing`, mientras que las compras se administran desde `purchasing`.
+
+---
+
+## Estructura relevante
 
 ```
 sales_project/
 ├── billing/
-│   ├── models.py          ← Define Supplier, Product (y otros)
-│   └── ...
+│   ├── admin.py
+│   ├── forms.py
+│   ├── models.py
+│   ├── templates/billing/
+│   └── urls.py
 └── purchasing/
-    ├── models.py          ← Importa Supplier y Product de billing
-    ├── forms.py           ← PurchaseForm, PurchaseDetailFormSet
-    ├── views.py           ← CRUD (list, create, update, detail, delete)
-    ├── urls.py            ← app_name = 'purchasing'
-    └── templates/
-        └── purchasing/
-            ├── purchase_list.html
-            ├── purchase_form.html
-            ├── purchase_detail.html
-            └── purchase_confirm_delete.html
+    ├── admin.py
+    ├── forms.py
+    ├── models.py
+    ├── templates/purchasing/
+    └── urls.py
 ```
-
-### Flujo de una compra
-
-1. El usuario selecciona un **Proveedor** (de `billing.Supplier`) y un número de factura del proveedor.
-2. Agrega **Productos** (de `billing.Product`) con cantidades y costos unitarios.
-3. Al guardar: se calculan subtotal, IVA (15%) y total; el stock de cada producto **aumenta** automáticamente.
-4. Al eliminar una compra: el stock de cada producto **disminuye** nuevamente.
 
 ---
 
 ## Instalación y ejecución
 
 ```bash
-# Instalar dependencias
 pip install -r requirements.txt
-
-# Aplicar migraciones
 python manage.py migrate
-
-# Crear superusuario (opcional)
 python manage.py createsuperuser
-
-# Ejecutar servidor de desarrollo
 python manage.py runserver
 ```
 
-Accede a `http://127.0.0.1:8000/` y navega a **Compras** en el menú principal.
+Luego abre `http://127.0.0.1:8000/` y navega por las secciones de ventas y compras.
+
+---
+
+## Notas adicionales
+
+- Usa el panel de administración para crear marcas, grupos, proveedores, productos y clientes.
+- Desde la interfaz de compras puedes ingresar facturas de proveedor y actualizar inventario.
+- El módulo de ventas utiliza el mismo catálogo de `billing`, evitando inconsistencias entre apps.

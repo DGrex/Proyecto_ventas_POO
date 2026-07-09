@@ -73,3 +73,31 @@ def audit_action(action_name):
 
         return wrapper
     return decorator
+
+
+def group_required(*group_names, redirect_url='/', error_message='No tiene permiso para acceder a esta opción.'):
+    """
+    Decorador para vistas basadas en funciones (FBV) que verifica si el usuario pertenece
+    a alguno de los grupos/roles indicados. El superusuario siempre pasa.
+    """
+    from django.contrib import messages
+    from django.shortcuts import redirect
+
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            # 1. Si no inició sesión -> al login
+            if not request.user.is_authenticated:
+                return redirect('login')
+            # 2. El superusuario siempre pasa
+            if request.user.is_superuser:
+                return view_func(request, *args, **kwargs)
+            # 3. ¿Pertenece a alguno de los roles permitidos?
+            if request.user.groups.filter(name__in=group_names).exists():
+                return view_func(request, *args, **kwargs)
+            # 4. No tiene el rol -> mensaje de error y redirección
+            messages.error(request, error_message)
+            return redirect(redirect_url)
+        return wrapper
+    return decorator
+

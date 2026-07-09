@@ -122,7 +122,10 @@ class PurchasingModelTests(TestCase):
 
 class PurchasingViewsTests(TestCase):
     def setUp(self):
+        from django.contrib.auth.models import Group
+        compras_group, _ = Group.objects.get_or_create(name='Analista de Compras')
         self.user = User.objects.create_user(username='purchasinguser', password='password123')
+        self.user.groups.add(compras_group)
         self.client = Client()
         self.client.login(username='purchasinguser', password='password123')
 
@@ -260,6 +263,12 @@ class PurchasingViewsTests(TestCase):
         self.assertEqual(self.product.stock, stock_before_update + 3)
 
     def test_purchase_delete_view_post(self):
+        # Dar rol Administrador para permitir la eliminación
+        from django.contrib.auth.models import Group
+        admin_group, _ = Group.objects.get_or_create(name='Administrador')
+        self.user.groups.add(admin_group)
+        self.user.save()
+
         # Crear una compra para eliminar
         purchase = Purchase.objects.create(
             supplier=self.supplier,

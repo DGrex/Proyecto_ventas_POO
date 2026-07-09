@@ -85,3 +85,4 @@ $ python manage.py shell
 =============================
 FIN DE LA GUÍA
 =============================
+PROMEDIO DE PRODUCTOS AGRUPADOS POR MARCAS QUE SEAN MAYORES A DOS DOLARES

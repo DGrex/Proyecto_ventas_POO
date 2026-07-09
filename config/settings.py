@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     'billing',
-    'purchasing',  # Nuestra app
+    'purchasing',
+    'security',
 ]
 
 

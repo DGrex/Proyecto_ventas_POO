@@ -10,9 +10,9 @@ from django.db.models import Avg, Q
 from .models import Purchase, PurchaseDetail
 from .forms import PurchaseForm, PurchaseDetailFormSet
 from billing.models import Product, Supplier
-from shared.decorators import audit_action
+from shared.decorators import audit_action, group_required
 from shared.mixins import ExportMixin
-
+ 
 
 class PurchaseExportHelper(ExportMixin):
     model = Purchase
@@ -28,6 +28,7 @@ class PurchaseExportHelper(ExportMixin):
     ]
 
 @login_required
+@group_required('Administrador', 'Analista de Compras')
 @audit_action('LIST_PURCHASES')
 def purchase_list(request):
     """Lista todas las compras realizadas a proveedores con filtros."""
@@ -107,6 +108,7 @@ def purchase_list(request):
 
 
 @login_required
+@group_required('Administrador', 'Analista de Compras')
 @audit_action('CREATE_PURCHASE')
 def purchase_create(request):
     """Crea una nueva compra y actualiza el stock."""
@@ -162,6 +164,7 @@ def purchase_create(request):
 
 
 @login_required
+@group_required('Administrador', 'Analista de Compras')
 @audit_action('UPDATE_PURCHASE')
 def purchase_update(request, pk):
     """Modifica una compra existente y ajusta el stock."""
@@ -230,6 +233,7 @@ def purchase_update(request, pk):
 
 
 @login_required
+@group_required('Administrador', 'Analista de Compras')
 @audit_action('DETAIL_PURCHASE')
 def purchase_detail(request, pk):
     """Muestra el detalle completo de una compra."""
@@ -241,6 +245,7 @@ def purchase_detail(request, pk):
 
 
 @login_required
+@group_required('Administrador')
 @audit_action('DELETE_PURCHASE')
 def purchase_delete(request, pk):
     """Elimina una compra y todos sus detalles (CASCADE), devolviendo el stock."""

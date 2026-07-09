@@ -1,4 +1,6 @@
 {% extends 'billing/base.html' %}
+{% load security_tags %}
+
 {% block title %}Home - Sales System{% endblock %}
 {% block content %}
 <style>
@@ -67,17 +69,24 @@
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
     <div>
       <h1 class="mb-2">Hola, {{ user.first_name|default:user.username }}.</h1>
-      <p class="lead text-muted mb-0">Bienvenido al panel de control. Gestiona ventas, compras, clientes e inventario desde una sola pantalla.</p>
+      <p class="lead text-muted mb-0">Bienvenido al panel de control. Gestiona el sistema de acuerdo a tus permisos asignados.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-      <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-primary rounded-pill px-4">Ver facturas</a>
-      <a href="{% url 'purchasing:purchase_list' %}" class="btn btn-primary rounded-pill px-4">Ver compras</a>
+      <!-- BOTONES SUPERIORES FILTRADOS -->
+      {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
+        <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-primary rounded-pill px-4">Ver facturas</a>
+      {% endif %}
+      {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
+        <a href="{% url 'purchasing:purchase_list' %}" class="btn btn-primary rounded-pill px-4">Ver compras</a>
+      {% endif %}
     </div>
   </div>
 </div>
 
+<!-- TARJETAS DE RESUMEN FILTRADAS -->
 <div class="row g-3 mb-4">
-  <div class="col-12 col-sm-6 col-xl-2">
+  {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
+  <div class="col-12 col-sm-6 col-md-4 col-xl-2">
     <div class="card text-white summary-card bg-primary">
       <div class="card-body text-center">
         <div class="summary-card-icon summary-card-icon-primary">
@@ -89,7 +98,7 @@
       </div>
     </div>
   </div>
-  <div class="col-12 col-sm-6 col-xl-2">
+  <div class="col-12 col-sm-6 col-md-4 col-xl-2">
     <div class="card text-white summary-card bg-success">
       <div class="card-body text-center">
         <div class="summary-card-icon summary-card-icon-success">
@@ -101,7 +110,10 @@
       </div>
     </div>
   </div>
-  <div class="col-12 col-sm-6 col-xl-2">
+  {% endif %}
+
+  {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
+  <div class="col-12 col-sm-6 col-md-4 col-xl-2">
     <div class="card text-white summary-card bg-info">
       <div class="card-body text-center">
         <div class="summary-card-icon summary-card-icon-info">
@@ -113,7 +125,7 @@
       </div>
     </div>
   </div>
-  <div class="col-12 col-sm-6 col-xl-2">
+  <div class="col-12 col-sm-6 col-md-4 col-xl-2">
     <div class="card text-dark summary-card bg-warning">
       <div class="card-body text-center">
         <div class="summary-card-icon summary-card-icon-warning">
@@ -125,7 +137,10 @@
       </div>
     </div>
   </div>
-  <div class="col-12 col-sm-6 col-xl-2">
+  {% endif %}
+
+  {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
+  <div class="col-12 col-sm-6 col-md-4 col-xl-2">
     <div class="card text-white summary-card bg-secondary">
       <div class="card-body text-center">
         <div class="summary-card-icon summary-card-icon-secondary">
@@ -137,9 +152,12 @@
       </div>
     </div>
   </div>
+  {% endif %}
 </div>
 
+<!-- SECCIONES DE TABLAS FILTRADAS -->
 <div class="row g-4">
+  {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
   <div class="col-lg-6">
     <div class="card home-panel">
       <div class="card-header bg-white border-0 pb-0">
@@ -173,7 +191,9 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
+  {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
   <div class="col-lg-6">
     <div class="card home-panel">
       <div class="card-header bg-white border-0 pb-0">
@@ -232,5 +252,6 @@
       </div>
     </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

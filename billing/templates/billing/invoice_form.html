@@ -331,7 +331,7 @@
           <div class="row mt-4 pt-3 border-top">
             <div class="col-12 d-flex gap-3 justify-content-start">
               <button type="submit" class="btn btn-premium-save">
-                {% if form.instance.pk %}Actualizar Factura{% else %}Create Invoice{% endif %}
+                {% if form.instance.pk %}Actualizar Factura{% else %}Crear Factura{% endif %}
               </button>
               <a href="{% url 'billing:invoice_list' %}" class="btn btn-premium-cancel d-flex align-items-center justify-content-center">
                 Cancel
@@ -340,7 +340,7 @@
           </div>
 
         </form>
-      </div>
+      </div>  
     </div>
   </div>
 </div>

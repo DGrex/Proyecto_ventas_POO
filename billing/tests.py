@@ -7,7 +7,13 @@ from .forms import ProductForm, CustomerForm
 
 class ProductListFilterTest(TestCase):
     def setUp(self):
+        from django.contrib.auth.models import Group
+        self.admin_group, _ = Group.objects.get_or_create(name='Administrador')
+        self.vendedor_group, _ = Group.objects.get_or_create(name='Vendedor')
+        self.compras_group, _ = Group.objects.get_or_create(name='Analista de Compras')
+        
         self.user = User.objects.create_user(username='testuser', password='password123')
+        self.user.groups.add(self.admin_group)
         self.client = Client()
         self.client.login(username='testuser', password='password123')
         
@@ -250,8 +256,11 @@ class ProductFormTest(TestCase):
 
     def test_view_create_product_with_image(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.contrib.auth.models import Group
         self.client = Client()
         user = User.objects.create_user(username='testviewuser', password='password123')
+        compras_group, _ = Group.objects.get_or_create(name='Analista de Compras')
+        user.groups.add(compras_group)
         self.client.login(username='testviewuser', password='password123')
         
         image_content = b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x4c\x01\x00\x3b'
@@ -397,7 +406,10 @@ class CustomerFormTest(TestCase):
 
 class CustomerViewsTest(TestCase):
     def setUp(self):
+        from django.contrib.auth.models import Group
+        vendedor_group, _ = Group.objects.get_or_create(name='Vendedor')
         self.user = User.objects.create_user(username='customeruser', password='password123')
+        self.user.groups.add(vendedor_group)
         self.client = Client()
         self.client.login(username='customeruser', password='password123')
         # Use valid DNI to prevent any issues with other logic
@@ -483,6 +495,9 @@ class CustomerViewsTest(TestCase):
     def test_customer_delete_view_post_by_staff(self):
         self.user = User.objects.get(username='customeruser')
         self.user.is_staff = True
+        from django.contrib.auth.models import Group
+        admin_group, _ = Group.objects.get_or_create(name='Administrador')
+        self.user.groups.add(admin_group)
         self.user.save()
         response = self.client.post(reverse('billing:customer_delete', kwargs={'pk': self.customer.pk}))
         self.assertEqual(response.status_code, 302)
