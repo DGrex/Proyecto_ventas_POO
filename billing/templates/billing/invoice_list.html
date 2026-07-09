@@ -1,60 +1,7 @@
 {% extends 'billing/base.html' %}
-{% block title %}Facturas</div>
 
-<!-- Column selector dynamic label script -->
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const checkboxes = document.querySelectorAll('.col-checkbox');
-    const label = document.getElementById('columnSelectLabel');
-    const selectAllBtn = document.getElementById('selectAllColumns');
-    const clearAllBtn = document.getElementById('clearAllColumns');
+{% block title %}Facturas{% endblock %}
 
-    function updateLabel() {
-      if (!label) return;
-      const checkedBoxes = document.querySelectorAll('.col-checkbox:checked');
-      const checkedCount = checkedBoxes.length;
-      const totalCount = checkboxes.length;
-      
-      if (checkedCount === totalCount) {
-        label.textContent = "Todas";
-      } else if (checkedCount === 0) {
-        label.textContent = "Ninguna";
-      } else {
-        const checkedNames = [];
-        checkedBoxes.forEach(cb => {
-          checkedNames.push(cb.nextElementSibling.textContent.trim());
-        });
-        label.textContent = checkedNames.join(', ');
-      }
-    }
-
-    checkboxes.forEach(cb => {
-      cb.addEventListener('change', updateLabel);
-    });
-
-    if (selectAllBtn) {
-      selectAllBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        checkboxes.forEach(cb => cb.checked = true);
-        updateLabel();
-      });
-    }
-
-    if (clearAllBtn) {
-      clearAllBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        checkboxes.forEach(cb => cb.checked = false);
-        updateLabel();
-      });
-    }
-
-    updateLabel();
-  });
-</script>
-
-{% endblock %}
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -77,17 +24,18 @@
   .products-table tbody tr:hover { background: #fafbfc; }
   .badge-active   { background: #d1fae5; color: #065f46; font-size: .7rem; font-weight: 700; border-radius: 50px; padding: 3px 10px; }
   .badge-inactive { background: #fee2e2; color: #991b1b; font-size: .7rem; font-weight: 700; border-radius: 50px; padding: 3px 10px; }
+  .badge-pending  { background: #fef3c7; color: #92400e; font-size: .7rem; font-weight: 700; border-radius: 50px; padding: 3px 10px; }
   .btn-view   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-block; }
   .btn-view:hover   { background: #dbeafe; }
   .btn-edit   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-block; }
   .btn-edit:hover   { background: #dbeafe; }
-  .btn-del    { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-block; }
-  .btn-del:hover    { background: #fecaca; }
+  .btn-del     { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-block; }
+  .btn-del:hover     { background: #fecaca; }
   .page-link { color: #2563eb; border-radius: 8px !important; margin: 0 2px; border-color: #eef1f6; font-size: .85rem; }
   .page-item.active .page-link { background: #2563eb; border-color: #2563eb; color: #fff; }
 </style>
-<div class="container-fluid py-4">
 
+<div class="container-fluid py-4">
 
   <div class="page-header d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -127,7 +75,7 @@
   <div class="collapse {% if has_active_filters %}show{% endif %}" id="filterCollapse">
     <div>
       <form method="get" id="filter-form">
-        {# Fila 1: DNI · Nombre del Cliente #}
+        {# Fila 1: DNI · Nombre del Cliente · Estado (activo/inactivo) #}
         <div class="row g-3 mb-3">
           <div class="col-md-3">
             <label for="f-dni" class="filter-label">DNI / RUC Cliente</label>
@@ -144,16 +92,37 @@
                    value="{{ filter.customer_name|default_if_none:'' }}">
           </div>
           <div class="col-md-4">
-            <label for="f-active" class="filter-label">Estado</label>
+            <label for="f-active" class="filter-label">Activa / Inactiva</label>
             <select id="f-active" name="is_active" class="form-select form-select-sm">
-              <option value=""     {% if filter.is_active == ''      %}selected{% endif %}>— Todos —</option>
-              <option value="true" {% if filter.is_active == 'true'  %}selected{% endif %}>Activa</option>
-              <option value="false"{% if filter.is_active == 'false' %}selected{% endif %}>Inactiva</option>
+              <option value="" {% if filter.is_active == '' %}selected{% endif %}>— Todos —</option>
+              <option value="true" {% if filter.is_active == 'true' %}selected{% endif %}>Activa</option>
+              <option value="false" {% if filter.is_active == 'false' %}selected{% endif %}>Inactiva</option>
             </select>
           </div>
         </div>
 
-        {# Fila 2: Total mínimo · Total máximo · Botones #}
+        {# Fila 2: Tipo de Pago · Estado de Cobro #}
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label for="f-tipo-pago" class="filter-label">Tipo de Pago</label>
+            <select id="f-tipo-pago" name="tipo_pago" class="form-select form-select-sm">
+              <option value="" {% if filter.tipo_pago == '' %}selected{% endif %}>— Todos —</option>
+              <option value="contado" {% if filter.tipo_pago == 'contado' %}selected{% endif %}>Contado</option>
+              <option value="credito" {% if filter.tipo_pago == 'credito' %}selected{% endif %}>Crédito</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="f-estado" class="filter-label">Estado de Cobro</label>
+            <select id="f-estado" name="estado" class="form-select form-select-sm">
+              <option value="" {% if filter.estado == '' %}selected{% endif %}>— Todos —</option>
+              <option value="PENDIENTE" {% if filter.estado == 'PENDIENTE' %}selected{% endif %}>Pendiente</option>
+              <option value="PAGADA" {% if filter.estado == 'PAGADA' %}selected{% endif %}>Pagada</option>
+              <option value="ANULADA" {% if filter.estado == 'ANULADA' %}selected{% endif %}>Anulada</option>
+            </select>
+          </div>
+        </div>
+
+        {# Fila 3: Total mínimo · Total máximo · Columnas · Botones #}
         <div class="row g-3 align-items-end">
           <div class="col-md-3">
             <label for="f-tmin" class="filter-label">Total mínimo ($)</label>
@@ -184,7 +153,7 @@
               <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                 <span class="fw-bold text-dark" style="font-size: 0.8rem;">Columnas</span>
                 <div>
-                    <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none me-2 text-primary" id="selectAllColumns" style="font-size: 0.75rem;">Todas</button>
+                  <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none me-2 text-primary" id="selectAllColumns" style="font-size: 0.75rem;">Todas</button>
                   <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none text-danger" id="clearAllColumns" style="font-size: 0.75rem;">Ninguna</button>
                 </div>
               </div>
@@ -239,6 +208,9 @@
         {% if 'subtotal' in selected_columns %}<th class="text-end">Subtotal</th>{% endif %}
         {% if 'tax' in selected_columns %}<th class="text-end">Impuesto</th>{% endif %}
         {% if 'total' in selected_columns %}<th class="text-end">Total</th>{% endif %}
+        {% if 'tipo_pago' in selected_columns %}<th>Tipo de Pago</th>{% endif %}
+        {% if 'saldo' in selected_columns %}<th class="text-end">Saldo</th>{% endif %}
+        {% if 'estado' in selected_columns %}<th>Estado</th>{% endif %}
         <th class="text-center">Acciones</th>
       </tr>
     </thead>
@@ -251,12 +223,40 @@
         {% if 'subtotal' in selected_columns %}<td class="text-end">${{ inv.subtotal }}</td>{% endif %}
         {% if 'tax' in selected_columns %}<td class="text-end">${{ inv.tax }}</td>{% endif %}
         {% if 'total' in selected_columns %}<td class="text-end fw-bold">${{ inv.total }}</td>{% endif %}
+        {% if 'tipo_pago' in selected_columns %}
+          <td>
+            {% if inv.tipo_pago == 'credito' %}
+              <span class="badge-inactive">Crédito</span>
+            {% else %}
+              <span class="badge-active">Contado</span>
+            {% endif %}
+          </td>
+        {% endif %}
+        {% if 'saldo' in selected_columns %}
+          <td class="text-end {% if inv.saldo > 0 %}text-danger fw-bold{% endif %}">${{ inv.saldo }}</td>
+        {% endif %}
+        {% if 'estado' in selected_columns %}
+          <td>
+            {% if inv.estado == 'PAGADA' %}
+              <span class="badge-active">Pagada</span>
+            {% elif inv.estado == 'ANULADA' %}
+              <span class="badge-inactive">Anulada</span>
+            {% else %}
+              <span class="badge-pending">Pendiente</span>
+            {% endif %}
+          </td>
+        {% endif %}
         <td class="text-center text-nowrap">
           <a href="{% url 'billing:invoice_detail' inv.pk %}" class="btn-view" title="Ver Detalle">
             <i class="fas fa-eye me-1"></i>Ver
           </a>
           <a href="{% url 'billing:invoice_update' inv.pk %}" class="btn-edit"><i class="fas fa-pencil-alt me-1"></i>Editar</a>
           <a href="{% url 'billing:invoice_delete' inv.pk %}" class="btn-del"><i class="fas fa-trash-alt me-1"></i>Borrar</a>
+          {% if inv.tipo_pago == 'credito' and inv.estado == 'PENDIENTE' %}
+            <a href="{% url 'cobros:cobro_create' inv.pk %}" class="btn-edit" title="Registrar pago">
+              <i class="fas fa-dollar-sign me-1"></i>Cobrar
+            </a>
+          {% endif %}
         </td>
       </tr>
       {% empty %}
@@ -349,5 +349,4 @@
     updateLabel();
   });
 </script>
-
 {% endblock %}

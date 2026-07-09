@@ -128,8 +128,7 @@ def brand_delete(request, pk):
 
 
 @method_decorator(audit_action('LIST_INVOICES'), name='dispatch')
-class InvoiceListView(LoginRequiredMixin,ExportMixin, GroupRequiredMixin, ListView):
-    """Lista todas las facturas con sus totales."""
+class InvoiceListView(LoginRequiredMixin, ExportMixin, GroupRequiredMixin, ListView):
     group_required = ['Administrador', 'Vendedor']
     model = Invoice
     template_name = 'billing/invoice_list.html'
@@ -143,6 +142,9 @@ class InvoiceListView(LoginRequiredMixin,ExportMixin, GroupRequiredMixin, ListVi
         ('subtotal', 'Subtotal'),
         ('tax', 'Impuesto'),
         ('total', 'Total'),
+        ('tipo_pago', 'Tipo de Pago'),
+        ('saldo', 'Saldo Pendiente'),
+        ('estado', 'Estado'),
         ('is_active', 'Estado')
     ]
 
@@ -153,6 +155,10 @@ class InvoiceListView(LoginRequiredMixin,ExportMixin, GroupRequiredMixin, ListVi
             qs = qs.filter(customer__dni=p['dni'])
         if p.get('customer_name'):
             qs = qs.filter(Q(customer__first_name__icontains=p['customer_name']) | Q(customer__last_name__icontains=p['customer_name']))
+        if p.get('tipo_pago'):
+            qs = qs.filter(tipo_pago=p['tipo_pago'])
+        if p.get('estado'):
+            qs = qs.filter(estado=p['estado'])
         if p.get('total_min'):
             try:
                 qs = qs.filter(total__gte=Decimal(p['total_min']))
@@ -169,16 +175,15 @@ class InvoiceListView(LoginRequiredMixin,ExportMixin, GroupRequiredMixin, ListVi
         elif is_active == 'false':
             qs = qs.filter(is_active=False)
         return qs
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['filter'] = self.request.GET
-        filter_keys = ['dni', 'customer_name', 'total_min', 'total_max', 'is_active']
-        ctx['has_active_filters'] = any(self.request.GET.get(k) for k in filter_keys)
-        params = self.request.GET.copy()
-        params.pop('page', None)
-        ctx['query_string'] = params.urlencode()
-        return ctx
+        def get_context_data(self, **kwargs):
+            ctx = super().get_context_data(**kwargs)
+            ctx['filter'] = self.request.GET
+            filter_keys = ['dni', 'customer_name', 'total_min', 'total_max', 'is_active', 'tipo_pago', 'estado']
+            ctx['has_active_filters'] = any(self.request.GET.get(k) for k in filter_keys)
+            params = self.request.GET.copy()
+            params.pop('page', None)
+            ctx['query_string'] = params.urlencode()
+            return ctx
 
 
 @method_decorator(audit_action('CREATE_INVOICE'), name='dispatch')
@@ -293,6 +298,10 @@ class InvoiceUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         context = self.get_context_data()
+        formset = context['formset']
+        print("FORM ERRORS:", form.errors)
+        print("FORMSET ERRORS:", formset.errors)
+        print("FORMSET NON-FORM ERRORS:", formset.non_form_errors())
         formset = context['formset']
         if formset.is_valid():
             try:

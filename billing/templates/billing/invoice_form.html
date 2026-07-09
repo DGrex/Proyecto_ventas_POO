@@ -42,7 +42,8 @@
     display: inline-block;
   }
 
-  .form-control-premium, .form-select-premium {
+  .form-control-premium,
+  .form-select-premium {
     border: 2px solid #e2e8f0;
     border-radius: 10px;
     padding: 0.65rem 1rem;
@@ -52,14 +53,16 @@
     color: #1e293b;
   }
 
-  .form-control-premium:focus, .form-select-premium:focus {
+  .form-control-premium:focus,
+  .form-select-premium:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
     background-color: #ffffff;
     outline: none;
   }
 
-  .form-control-premium[readonly], .form-control-premium:disabled {
+  .form-control-premium[readonly],
+  .form-control-premium:disabled {
     background-color: #f1f5f9;
     color: #64748b;
     cursor: not-allowed;
@@ -83,7 +86,8 @@
   }
 
   .total-row {
-    background-color: #fef9c3 !important; /* light yellow */
+    background-color: #fef9c3 !important;
+    /* light yellow */
     font-weight: bold;
   }
 
@@ -152,18 +156,18 @@
         <div>
           <h4 class="mb-1 fw-bold text-white">
             {% if form.instance.pk %}
-              <i class="bi bi-pencil-square me-2 text-warning"></i>Editar Factura
+            <i class="bi bi-pencil-square me-2 text-warning"></i>Editar Factura
             {% else %}
-              <i class="bi bi-plus-circle me-2 text-warning"></i>Crear Factura
+            <i class="bi bi-plus-circle me-2 text-warning"></i>Crear Factura
             {% endif %}
           </h4>
           <p class="text-white-50 mb-0 small">Gestión y registro de facturación de ventas</p>
         </div>
         <div class="d-flex align-items-center gap-2">
           {% if form.instance.pk %}
-            <span class="badge badge-new">#{{ form.instance.pk }}</span>
+          <span class="badge badge-new">#{{ form.instance.pk }}</span>
           {% else %}
-            <span class="badge badge-new">New</span>
+          <span class="badge badge-new">New</span>
           {% endif %}
           <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-light btn-sm rounded-pill">
             <i class="bi bi-arrow-left"></i> Volver al listado
@@ -174,13 +178,13 @@
       <!-- Cuerpo del Formulario -->
       <div class="premium-card-body">
         {% if form.non_field_errors %}
-          <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            {% for error in form.non_field_errors %}
-              {{ error }}
-            {% endfor %}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {% for error in form.non_field_errors %}
+          {{ error }}
+          {% endfor %}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endif %}
 
         <form method="post" novalidate id="invoice-form">
@@ -195,19 +199,28 @@
               </label>
               {{ form.customer }}
               {% if form.customer.errors %}
-                <div class="invalid-feedback d-block">
-                  {% for error in form.customer.errors %}{{ error }}{% endfor %}
-                </div>
+              <div class="invalid-feedback d-block">
+                {% for error in form.customer.errors %}{{ error }}{% endfor %}
+              </div>
               {% endif %}
             </div>
 
             <!-- Fecha (Solo Lectura) -->
             <div class="col-md-6">
               <label class="form-label form-label-premium">Fecha</label>
-              <input type="text" class="form-control form-control-premium bg-light text-muted border-secondary-subtle" readonly 
-                     value="{% if form.instance.pk %}{{ form.instance.invoice_date|date:'d/m/Y' }}{% else %}{% now 'd/m/Y' %}{% endif %}">
+              <input type="text" class="form-control form-control-premium bg-light text-muted border-secondary-subtle"
+                readonly
+                value="{% if form.instance.pk %}{{ form.instance.invoice_date|date:'d/m/Y' }}{% else %}{% now 'd/m/Y' %}{% endif %}">
               <div class="form-text text-muted small">Se registra automáticamente con la fecha de hoy.</div>
             </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.tipo_pago.id_for_label }}" class="form-label">Tipo de Pago</label>
+            {{ form.tipo_pago }}
+            {% if form.tipo_pago.errors %}
+            <div class="invalid-feedback d-block">{{ form.tipo_pago.errors }}</div>
+            {% endif %}
           </div>
 
           <!-- Líneas de Detalle -->
@@ -245,7 +258,8 @@
                   </td>
                   <td>
                     <div class="input-group">
-                      <span class="input-group-text bg-light border-2 border-end-0" style="border-radius: 10px 0 0 10px;">$</span>
+                      <span class="input-group-text bg-light border-2 border-end-0"
+                        style="border-radius: 10px 0 0 10px;">$</span>
                       {{ formset.empty_form.unit_price }}
                     </div>
                   </td>
@@ -270,28 +284,29 @@
                       <i class="bi bi-exclamation-triangle"></i> Stock disponible: <span class="stock-limit">0</span>
                     </div>
                     {% if detail_form.product.errors %}
-                      <div class="invalid-feedback d-block">
-                        {% for error in detail_form.product.errors %}{{ error }}{% endfor %}
-                      </div>
+                    <div class="invalid-feedback d-block">
+                      {% for error in detail_form.product.errors %}{{ error }}{% endfor %}
+                    </div>
                     {% endif %}
                   </td>
                   <td>
                     {{ detail_form.quantity }}
                     {% if detail_form.quantity.errors %}
-                      <div class="invalid-feedback d-block">
-                        {% for error in detail_form.quantity.errors %}{{ error }}{% endfor %}
-                      </div>
+                    <div class="invalid-feedback d-block">
+                      {% for error in detail_form.quantity.errors %}{{ error }}{% endfor %}
+                    </div>
                     {% endif %}
                   </td>
                   <td>
                     <div class="input-group">
-                      <span class="input-group-text bg-light border-2 border-end-0" style="border-radius: 10px 0 0 10px;">$</span>
+                      <span class="input-group-text bg-light border-2 border-end-0"
+                        style="border-radius: 10px 0 0 10px;">$</span>
                       {{ detail_form.unit_price }}
                     </div>
                     {% if detail_form.unit_price.errors %}
-                      <div class="invalid-feedback d-block">
-                        {% for error in detail_form.unit_price.errors %}{{ error }}{% endfor %}
-                      </div>
+                    <div class="invalid-feedback d-block">
+                      {% for error in detail_form.unit_price.errors %}{{ error }}{% endfor %}
+                    </div>
                     {% endif %}
                   </td>
                   <td class="text-end fw-semibold row-subtotal-display" style="padding-right: 1.5rem;">$0.00</td>
@@ -333,14 +348,15 @@
               <button type="submit" class="btn btn-premium-save">
                 {% if form.instance.pk %}Actualizar Factura{% else %}Crear Factura{% endif %}
               </button>
-              <a href="{% url 'billing:invoice_list' %}" class="btn btn-premium-cancel d-flex align-items-center justify-content-center">
+              <a href="{% url 'billing:invoice_list' %}"
+                class="btn btn-premium-cancel d-flex align-items-center justify-content-center">
                 Cancel
               </a>
             </div>
           </div>
 
         </form>
-      </div>  
+      </div>
     </div>
   </div>
 </div>
@@ -351,7 +367,7 @@
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const productsData = JSON.parse(document.getElementById('products-data').textContent);
     const tbody = document.getElementById('details-tbody');
     const emptyRowTemplate = document.getElementById('empty-row');
@@ -389,7 +405,7 @@
         // Si se selecciona un producto y el precio está vacío/es cero, asignamos el precio del catálogo
         if (productId && productsMap[productId]) {
           const product = productsMap[productId];
-          
+
           // Validación de stock
           const availableStock = product.stock;
           if (quantity > availableStock) {
@@ -427,7 +443,7 @@
       const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
 
       // Al cambiar el producto, actualizamos su precio unitario
-      productSelect.addEventListener('change', function() {
+      productSelect.addEventListener('change', function () {
         const productId = this.value;
         if (productId && productsMap[productId]) {
           priceInput.value = productsMap[productId].unit_price.toFixed(2);
@@ -441,7 +457,7 @@
       qtyInput.addEventListener('input', calculateTotals);
 
       // Eliminar fila
-      deleteBtn.addEventListener('click', function() {
+      deleteBtn.addEventListener('click', function () {
         if (deleteCheckbox) {
           // Si es una fila existente en base de datos, la marcamos para eliminar y la ocultamos
           deleteCheckbox.checked = true;
@@ -456,9 +472,9 @@
     }
 
     // Botón Agregar Fila
-    addRowBtn.addEventListener('click', function() {
+    addRowBtn.addEventListener('click', function () {
       const formIdx = parseInt(totalFormsInput.value);
-      
+
       // Clonamos el template
       const clone = emptyRowTemplate.cloneNode(true);
       clone.removeAttribute('id');
@@ -484,7 +500,7 @@
     const initialRows = tbody.querySelectorAll('.detail-row');
     initialRows.forEach(row => {
       setupRowEvents(row);
-      
+
       // Cargar precio por defecto si es una creación y no está definido
       const productSelect = row.querySelector('.detail-product');
       const priceInput = row.querySelector('.detail-price');

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'billing',
     'purchasing',
     'security',
+    'cobros',
 ]
 
 
