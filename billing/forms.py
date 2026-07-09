@@ -40,9 +40,10 @@ class InvoiceForm(forms.ModelForm):
     """Formulario premium para la cabecera de factura."""
     class Meta:
         model = Invoice
-        fields = ['customer']
+        fields = ['customer', 'tipo_pago']
         labels = {
             'customer': 'Cliente',
+            'tipo_pago': 'Tipo de Pago',
         }
         widgets = {
             'customer': forms.Select(attrs={

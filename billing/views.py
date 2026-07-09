@@ -230,6 +230,12 @@ class InvoiceCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
                     self.object.subtotal = subtotal
                     self.object.tax = subtotal * Decimal('0.15') # IVA 15%
                     self.object.total = self.object.subtotal + self.object.tax
+                    if self.object.tipo_pago == 'credito':
+                        self.object.saldo = self.object.total
+                        self.object.estado = 'PENDIENTE'
+                    else:
+                        self.object.saldo = 0
+                        self.object.estado = 'PAGADA'  # el contado se considera cancelado al emitir
                     self.object.save()
 
                 messages.success(self.request, f'Factura #{self.object.id} creada correctamente! Total: ${self.object.total}')
@@ -302,6 +308,12 @@ class InvoiceUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
                     self.object.subtotal = subtotal
                     self.object.tax = subtotal * Decimal('0.15') # IVA 15%
                     self.object.total = self.object.subtotal + self.object.tax
+                    if self.object.tipo_pago == 'credito':
+                        self.object.saldo = self.object.total
+                        self.object.estado = 'PENDIENTE'
+                    else:
+                        self.object.saldo = 0
+                        self.object.estado = 'PAGADA'  # el contado se considera cancelado al emitir
                     self.object.save()
 
                 messages.success(self.request, f'Factura #{self.object.id} actualizada correctamente! Total: ${self.object.total}')

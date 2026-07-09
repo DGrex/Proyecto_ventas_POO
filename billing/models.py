@@ -111,15 +111,31 @@ class CustomerProfile(models.Model):
     def __str__(self): return f'Perfil: {self.customer}'
 
 class Invoice(models.Model):
-    """Cabecera de factura."""
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='Facturas', verbose_name = 'Cliente')
-    invoice_date = models.DateTimeField(auto_now_add=True, verbose_name = 'Fecha de Factura')
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name = 'Subtotal')
-    tax = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name = 'Impuesto')
-    total = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name = 'Total')
-    is_active = models.BooleanField(default=True, verbose_name = 'Activa')
-    class Meta: ordering = ['-invoice_date']
-    def __str__(self): return f'Factura #{self.id} - {self.customer}'
+    TIPO_PAGO = [
+        ('contado', 'Contado'),
+        ('credito', 'Crédito'),
+    ]
+    ESTADO = [
+        ('PENDIENTE', 'Pendiente'),
+        ('PAGADA', 'Pagada'),
+        ('ANULADA', 'Anulada'),
+    ]
+
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='Facturas', verbose_name='Cliente')
+    invoice_date = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de Factura')
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Subtotal')
+    tax = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Impuesto')
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Total')
+    tipo_pago = models.CharField(max_length=10, choices=TIPO_PAGO, default='contado', verbose_name='Tipo de Pago')
+    saldo = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Saldo Pendiente')
+    estado = models.CharField(max_length=10, choices=ESTADO, default='PENDIENTE', verbose_name='Estado')
+    is_active = models.BooleanField(default=True, verbose_name='Activa')
+
+    class Meta:
+        ordering = ['-invoice_date']
+
+    def __str__(self):
+        return f'Factura #{self.id} - {self.customer}'
 
 class InvoiceDetail(models.Model):
     """Líneas de factura."""
