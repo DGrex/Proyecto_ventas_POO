@@ -264,6 +264,7 @@
           {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
           <li class="nav-item"><a class="nav-link" href="{% url 'billing:customer_list' %}">Clientes</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'billing:invoice_list' %}">Facturas</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'cobros:factura_pendiente_list' %}">Cobros</a></li>
           {% endif %}
 
           <!-- SEGURIDAD: solo Administrador -->

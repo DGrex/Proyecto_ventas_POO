@@ -24,22 +24,23 @@ class CobroFactura(models.Model):
     def __str__(self):
         return f'Cobro ${self.valor} - Factura #{self.factura_id}'
 
-def clean(self):
-    if not self.factura_id:
-        return  # todavía no hay factura asignada, nada que validar aún
+    def clean(self):
+        if not self.factura_id:
+            return  # todavía no hay factura asignada, nada que validar aún
 
-    if self.factura.estado == 'ANULADA':
-        raise ValidationError('No se puede registrar un pago sobre una factura anulada.')
-    if self.valor is None or self.valor <= 0:
-        raise ValidationError('El valor del pago debe ser mayor que cero.')
+        if self.factura.estado == 'ANULADA':
+            raise ValidationError('No se puede registrar un pago sobre una factura anulada.')
+        if self.valor is None or self.valor <= 0:
+            raise ValidationError('El valor del pago debe ser mayor que cero.')
 
-    saldo_disponible = self.factura.saldo
-    if self.pk:
-        original = CobroFactura.objects.get(pk=self.pk)
-        saldo_disponible += original.valor
+        saldo_disponible = self.factura.saldo
+        if self.pk:
+            original = CobroFactura.objects.get(pk=self.pk)
+            saldo_disponible += original.valor
 
-    if self.valor > saldo_disponible:
-        raise ValidationError(f'El pago excede el saldo pendiente (${saldo_disponible}).')
+        if self.valor > saldo_disponible:
+            raise ValidationError(f'El pago excede el saldo pendiente (${saldo_disponible}).')
+
     def save(self, *args, **kwargs):
         self.full_clean()
         is_new = self.pk is None
@@ -58,11 +59,6 @@ def clean(self):
 
     def delete(self, *args, **kwargs):
         factura = self.factura
-        if factura.estado == 'PAGADA':
-            # Si ya estaba completamente pagada, eliminar dejaría el saldo/estado
-            # inconsistentes solo si el saldo actual es 0 y hay más cobros después;
-            # aquí simplemente reponemos el valor y recalculamos el estado.
-            pass
         valor = self.valor
         super().delete(*args, **kwargs)
         factura.saldo = factura.saldo + valor
