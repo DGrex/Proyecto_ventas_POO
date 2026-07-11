@@ -5,7 +5,16 @@ from django.dispatch import receiver
 from billing.models import Supplier, Product   # Reutilizamos modelos de billing
 
 class Purchase(models.Model):
-    """Cabecera de compra. Documenta una adquisición a un proveedor."""
+    TIPO_PAGO = [
+        ('contado', 'Contado'),
+        ('credito', 'Crédito'),
+    ]
+    ESTADO = [
+        ('PENDIENTE', 'Pendiente'),
+        ('PAGADA', 'Pagada'),
+        ('ANULADA', 'Anulada'),
+    ]
+
     supplier = models.ForeignKey(
         Supplier, on_delete=models.PROTECT, related_name='purchases', verbose_name='Proveedor'
     )
@@ -16,18 +25,19 @@ class Purchase(models.Model):
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Subtotal')
     tax = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Impuesto (15%)')
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Total')
+    tipo_pago = models.CharField(max_length=10, choices=TIPO_PAGO, default='contado', verbose_name='Tipo de Pago')
+    saldo = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Saldo Pendiente')
+    estado = models.CharField(max_length=10, choices=ESTADO, default='PENDIENTE', verbose_name='Estado')
     is_active = models.BooleanField(default=True, verbose_name='Activa')
 
     class Meta:
         verbose_name = 'Compra'
         verbose_name_plural = 'Compras'
         ordering = ['-purchase_date']
-        # Evitar facturas de proveedor duplicadas para el mismo proveedor (Reto 2)
         unique_together = ['supplier', 'document_number']
 
     def __str__(self):
         return f'Compra #{self.id} - {self.supplier}'
-
 
 class PurchaseDetail(models.Model):
     """Líneas de compra. Cada fila es un producto adquirido."""

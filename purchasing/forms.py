@@ -7,10 +7,11 @@ class PurchaseForm(forms.ModelForm):
     """Formulario premium para la cabecera de compra."""
     class Meta:
         model = Purchase
-        fields = ['supplier', 'document_number']
+        fields = ['supplier', 'document_number', 'tipo_pago']
         labels = {
             'supplier': 'Proveedor',
             'document_number': 'Nº Factura Proveedor',
+            'tipo_pago': 'Tipo de Pago',
         }
         widgets = {
             'supplier': forms.Select(attrs={'class': 'form-select form-select-premium'}),
@@ -18,6 +19,7 @@ class PurchaseForm(forms.ModelForm):
                 'class': 'form-control form-control-premium',
                 'placeholder': 'Ej: INV-001-2026'
             }),
+            'tipo_pago': forms.Select(attrs={'class': 'form-select form-select-premium'}),
         }
 
     def __init__(self, *args, **kwargs):

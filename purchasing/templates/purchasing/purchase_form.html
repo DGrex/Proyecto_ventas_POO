@@ -42,7 +42,8 @@
     display: inline-block;
   }
 
-  .form-control-premium, .form-select-premium {
+  .form-control-premium,
+  .form-select-premium {
     border: 2px solid #e2e8f0;
     border-radius: 10px;
     padding: 0.65rem 1rem;
@@ -52,7 +53,8 @@
     color: #1e293b;
   }
 
-  .form-control-premium:focus, .form-select-premium:focus {
+  .form-control-premium:focus,
+  .form-select-premium:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
     background-color: #ffffff;
@@ -92,7 +94,8 @@
   }
 
   .total-row {
-    background-color: #fef9c3 !important; /* light yellow */
+    background-color: #fef9c3 !important;
+    /* light yellow */
     font-weight: bold;
   }
 
@@ -193,18 +196,18 @@
         <div>
           <h4 class="mb-1 fw-bold text-white">
             {% if form.instance.pk %}
-              <i class="bi bi-pencil-square me-2 text-warning"></i>Editar Compra
+            <i class="bi bi-pencil-square me-2 text-warning"></i>Editar Compra
             {% else %}
-              <i class="bi bi-plus-circle me-2 text-warning"></i>Registrar Compra
+            <i class="bi bi-plus-circle me-2 text-warning"></i>Registrar Compra
             {% endif %}
           </h4>
           <p class="text-white-50 mb-0 small">Módulo de adquisiciones y abastecimiento de inventario</p>
         </div>
         <div class="d-flex align-items-center gap-2">
           {% if form.instance.pk %}
-            <span class="badge badge-new">#{{ form.instance.pk }}</span>
+          <span class="badge badge-new">#{{ form.instance.pk }}</span>
           {% else %}
-            <span class="badge badge-new">Compra</span>
+          <span class="badge badge-new">Compra</span>
           {% endif %}
           <a href="{% url 'purchasing:purchase_list' %}" class="btn btn-outline-light btn-sm rounded-pill">
             <i class="bi bi-arrow-left"></i> Volver al listado
@@ -215,13 +218,13 @@
       <!-- Cuerpo del Formulario -->
       <div class="premium-card-body">
         {% if form.non_field_errors %}
-          <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            {% for error in form.non_field_errors %}
-              {{ error }}
-            {% endfor %}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {% for error in form.non_field_errors %}
+          {{ error }}
+          {% endfor %}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endif %}
 
         <form method="post" novalidate id="purchase-form">
@@ -236,9 +239,9 @@
               </label>
               {{ form.supplier }}
               {% if form.supplier.errors %}
-                <div class="invalid-feedback d-block">
-                  {% for error in form.supplier.errors %}{{ error }}{% endfor %}
-                </div>
+              <div class="invalid-feedback d-block">
+                {% for error in form.supplier.errors %}{{ error }}{% endfor %}
+              </div>
               {% endif %}
             </div>
 
@@ -249,9 +252,23 @@
               </label>
               {{ form.document_number }}
               {% if form.document_number.errors %}
-                <div class="invalid-feedback d-block">
-                  {% for error in form.document_number.errors %}{{ error }}{% endfor %}
-                </div>
+              <div class="invalid-feedback d-block">
+                {% for error in form.document_number.errors %}{{ error }}{% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="row g-4 mb-4 pb-4 border-bottom">
+            <div class="col-md-6">
+              <label for="{{ form.tipo_pago.id_for_label }}" class="form-label form-label-premium">
+                {{ form.tipo_pago.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.tipo_pago }}
+              {% if form.tipo_pago.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in form.tipo_pago.errors %}{{ error }}{% endfor %}
+              </div>
               {% endif %}
             </div>
           </div>
@@ -263,7 +280,8 @@
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                   <h5 class="fw-bold text-dark mb-1">Detalles de la Adquisición</h5>
-                  <p class="text-muted small mb-0">Agregar productos, cantidades y costo unitario para calcular automáticamente subtotal, IVA y total.</p>
+                  <p class="text-muted small mb-0">Agregar productos, cantidades y costo unitario para calcular
+                    automáticamente subtotal, IVA y total.</p>
                 </div>
                 <button type="button" class="btn btn-outline-primary btn-sm px-3 rounded" id="btn-add-row">
                   <i class="bi bi-plus-lg"></i> Agregar producto
@@ -272,159 +290,166 @@
 
               <div class="table-responsive">
                 <table class="table table-bordered align-middle details-table" id="details-table">
-              <thead>
-                <tr>
-                  <th style="width: 45%;">Producto</th>
-                  <th style="width: 14%;" class="text-center">Cantidad</th>
-                  <th style="width: 16%;" class="text-end">Costo unitario</th>
-                  <th style="width: 15%;" class="text-end">Subtotal</th>
-                  <th style="width: 10%;" class="text-center">Eliminar</th>
-                </tr>
-              </thead>
-              <tbody id="details-tbody">
-                <!-- Template Row (Hidden) -->
-                <tr id="empty-row" style="display: none;">
-                  <td>
-                    {{ formset.empty_form.product }}
-                    <div class="stock-info text-success small mt-1 d-none">
-                      <i class="bi bi-box-seam"></i> Stock actual: <span class="stock-current">0</span>
-                    </div>
-                  </td>
-                  <td>
-                    {{ formset.empty_form.quantity }}
-                  </td>
-                  <td>
-                    {{ formset.empty_form.unit_cost }}
-                  </td>
-                  <td class="text-end fw-semibold row-subtotal-display" style="padding-right: 1.5rem;">$0.00</td>
-                  <td class="text-center">
-                    <div class="d-none">
-                      {{ formset.empty_form.DELETE }}
-                    </div>
-                    <button type="button" class="btn btn-delete-row btn-sm rounded-circle p-1">
-                      <i class="bi bi-x" style="font-size: 1.25rem; line-height: 1;"></i>
-                    </button>
-                  </td>
-                  {{ formset.empty_form.id }}
-                </tr>
+                  <thead>
+                    <tr>
+                      <th style="width: 45%;">Producto</th>
+                      <th style="width: 14%;" class="text-center">Cantidad</th>
+                      <th style="width: 16%;" class="text-end">Costo unitario</th>
+                      <th style="width: 15%;" class="text-end">Subtotal</th>
+                      <th style="width: 10%;" class="text-center">Eliminar</th>
+                    </tr>
+                  </thead>
+                  <tbody id="details-tbody">
+                    <!-- Template Row (Hidden) -->
+                    <tr id="empty-row" style="display: none;">
+                      <td>
+                        {{ formset.empty_form.product }}
+                        <div class="stock-info text-success small mt-1 d-none">
+                          <i class="bi bi-box-seam"></i> Stock actual: <span class="stock-current">0</span>
+                        </div>
+                      </td>
+                      <td>
+                        {{ formset.empty_form.quantity }}
+                      </td>
+                      <td>
+                        {{ formset.empty_form.unit_cost }}
+                      </td>
+                      <td class="text-end fw-semibold row-subtotal-display" style="padding-right: 1.5rem;">$0.00</td>
+                      <td class="text-center">
+                        <div class="d-none">
+                          {{ formset.empty_form.DELETE }}
+                        </div>
+                        <button type="button" class="btn btn-delete-row btn-sm rounded-circle p-1">
+                          <i class="bi bi-x" style="font-size: 1.25rem; line-height: 1;"></i>
+                        </button>
+                      </td>
+                      {{ formset.empty_form.id }}
+                    </tr>
 
-                <!-- Existing / Initial Rows -->
-                {% for detail_form in formset %}
-                <tr class="detail-row">
-                  <td>
-                    {{ detail_form.product }}
-                    <div class="stock-info text-success small mt-1 d-none">
-                      <i class="bi bi-box-seam"></i> Stock actual: <span class="stock-current">0</span>
-                    </div>
-                    {% if detail_form.product.errors %}
-                      <div class="invalid-feedback d-block">
-                        {% for error in detail_form.product.errors %}{{ error }}{% endfor %}
-                      </div>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {{ detail_form.quantity }}
-                    {% if detail_form.quantity.errors %}
-                      <div class="invalid-feedback d-block">
-                        {% for error in detail_form.quantity.errors %}{{ error }}{% endfor %}
-                      </div>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {{ detail_form.unit_cost }}
-                    {% if detail_form.unit_cost.errors %}
-                      <div class="invalid-feedback d-block">
-                        {% for error in detail_form.unit_cost.errors %}{{ error }}{% endfor %}
-                      </div>
-                    {% endif %}
-                  </td>
-                  <td class="text-end fw-semibold row-subtotal-display" style="padding-right: 1.5rem;">$0.00</td>
-                  <td class="text-center">
-                    <div class="d-none">
-                      {{ detail_form.DELETE }}
-                    </div>
-                    <button type="button" class="btn btn-delete-row btn-sm rounded-circle p-1">
-                      <i class="bi bi-x" style="font-size: 1.25rem; line-height: 1;"></i>
-                    </button>
-                  </td>
-                  {{ detail_form.id }}
-                </tr>
-                {% endfor %}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="3" class="text-end fw-semibold">Subtotal:</td>
-                  <td class="text-end fw-semibold" style="padding-right: 1.5rem;" id="purchase-subtotal">$0.00</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td colspan="3" class="text-end fw-semibold">IVA (15%):</td>
-                  <td class="text-end fw-semibold" style="padding-right: 1.5rem;" id="purchase-tax">$0.00</td>
-                  <td></td>
-                </tr>
-                <tr class="total-row">
-                  <td colspan="3" class="text-end fs-5">TOTAL:</td>
-                  <td class="text-end fs-5 text-dark" style="padding-right: 1.5rem;" id="purchase-total">$0.00</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-
-        <div class="col-lg-4">
-          <div class="summary-card h-100">
-            <div class="summary-card-header text-center">
-              <span class="badge bg-primary bg-opacity-15 text-primary rounded-pill px-3 py-2 fw-semibold">Resumen de Compra</span>
-              <h5 class="mt-3 fw-bold">Totales</h5>
-              <p class="text-muted small mb-0">Los valores se actualizan automáticamente al cambiar las líneas de producto.</p>
+                    <!-- Existing / Initial Rows -->
+                    {% for detail_form in formset %}
+                    <tr class="detail-row">
+                      <td>
+                        {{ detail_form.product }}
+                        <div class="stock-info text-success small mt-1 d-none">
+                          <i class="bi bi-box-seam"></i> Stock actual: <span class="stock-current">0</span>
+                        </div>
+                        {% if detail_form.product.errors %}
+                        <div class="invalid-feedback d-block">
+                          {% for error in detail_form.product.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {{ detail_form.quantity }}
+                        {% if detail_form.quantity.errors %}
+                        <div class="invalid-feedback d-block">
+                          {% for error in detail_form.quantity.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {{ detail_form.unit_cost }}
+                        {% if detail_form.unit_cost.errors %}
+                        <div class="invalid-feedback d-block">
+                          {% for error in detail_form.unit_cost.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                      </td>
+                      <td class="text-end fw-semibold row-subtotal-display" style="padding-right: 1.5rem;">$0.00</td>
+                      <td class="text-center">
+                        <div class="d-none">
+                          {{ detail_form.DELETE }}
+                        </div>
+                        <button type="button" class="btn btn-delete-row btn-sm rounded-circle p-1">
+                          <i class="bi bi-x" style="font-size: 1.25rem; line-height: 1;"></i>
+                        </button>
+                      </td>
+                      {{ detail_form.id }}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="3" class="text-end fw-semibold">Subtotal:</td>
+                      <td class="text-end fw-semibold" style="padding-right: 1.5rem;" id="purchase-subtotal">$0.00</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td colspan="3" class="text-end fw-semibold">IVA (15%):</td>
+                      <td class="text-end fw-semibold" style="padding-right: 1.5rem;" id="purchase-tax">$0.00</td>
+                      <td></td>
+                    </tr>
+                    <tr class="total-row">
+                      <td colspan="3" class="text-end fs-5">TOTAL:</td>
+                      <td class="text-end fs-5 text-dark" style="padding-right: 1.5rem;" id="purchase-total">$0.00</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
-            <div class="summary-card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="summary-key">Subtotal</span>
-                <span class="summary-value" id="summary-subtotal">$0.00</span>
-              </div>
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="summary-key">IVA (15%)</span>
-                <span class="summary-value" id="summary-tax">$0.00</span>
-              </div>
-              <div class="border-top pt-3 mt-3 mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="summary-key fw-semibold">Total estimado</span>
-                  <span class="summary-value fs-4" id="summary-total">$0.00</span>
+
+            <div class="col-lg-4">
+              <div class="summary-card h-100">
+                <div class="summary-card-header text-center">
+                  <span class="badge bg-primary bg-opacity-15 text-primary rounded-pill px-3 py-2 fw-semibold">Resumen
+                    de Compra</span>
+                  <h5 class="mt-3 fw-bold">Totales</h5>
+                  <p class="text-muted small mb-0">Los valores se actualizan automáticamente al cambiar las líneas de
+                    producto.</p>
+                </div>
+                <div class="summary-card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="summary-key">Subtotal</span>
+                    <span class="summary-value" id="summary-subtotal">$0.00</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="summary-key">IVA (15%)</span>
+                    <span class="summary-value" id="summary-tax">$0.00</span>
+                  </div>
+                  <div class="border-top pt-3 mt-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="summary-key fw-semibold">Total estimado</span>
+                      <span class="summary-value fs-4" id="summary-total">$0.00</span>
+                    </div>
+                  </div>
+                  <div class="bg-light rounded-4 p-3">
+                    <p class="summary-note mb-0">
+                      Revisa el costo unitario y la cantidad antes de guardar. El stock se actualizará al registrar o
+                      editar cada línea de compra.
+                    </p>
+                  </div>
+                  <div class="mt-4">
+                    <h6 class="fw-semibold mb-2">Recomendaciones</h6>
+                    <ul class="list-unstyled small mb-0">
+                      <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Usa proveedores activos.
+                      </li>
+                      <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Evita duplicar el documento
+                        de proveedor.</li>
+                      <li><i class="bi bi-check2-circle text-success me-2"></i>Completa todos los campos obligatorios.
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-              <div class="bg-light rounded-4 p-3">
-                <p class="summary-note mb-0">
-                  Revisa el costo unitario y la cantidad antes de guardar. El stock se actualizará al registrar o editar cada línea de compra.
-                </p>
-              </div>
-              <div class="mt-4">
-                <h6 class="fw-semibold mb-2">Recomendaciones</h6>
-                <ul class="list-unstyled small mb-0">
-                  <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Usa proveedores activos.</li>
-                  <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Evita duplicar el documento de proveedor.</li>
-                  <li><i class="bi bi-check2-circle text-success me-2"></i>Completa todos los campos obligatorios.</li>
-                </ul>
-              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Botones de Acción -->
-      <div class="row mt-4 pt-3 border-top">
-        <div class="col-12 d-flex gap-3 justify-content-start">
-          <button type="submit" class="btn btn-premium-save">
-            {% if form.instance.pk %}Actualizar Compra{% else %}Registrar Compra{% endif %}
-          </button>
-          <a href="{% url 'purchasing:purchase_list' %}" class="btn btn-premium-cancel d-flex align-items-center justify-content-center">
-            Cancelar
-          </a>
-        </div>
-      </div>
+          <!-- Botones de Acción -->
+          <div class="row mt-4 pt-3 border-top">
+            <div class="col-12 d-flex gap-3 justify-content-start">
+              <button type="submit" class="btn btn-premium-save">
+                {% if form.instance.pk %}Actualizar Compra{% else %}Registrar Compra{% endif %}
+              </button>
+              <a href="{% url 'purchasing:purchase_list' %}"
+                class="btn btn-premium-cancel d-flex align-items-center justify-content-center">
+                Cancelar
+              </a>
+            </div>
+          </div>
 
-    </form>
+        </form>
       </div>
     </div>
   </div>
@@ -436,7 +461,7 @@
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const productsData = JSON.parse(document.getElementById('products-data').textContent);
     const tbody = document.getElementById('details-tbody');
     const emptyRowTemplate = document.getElementById('empty-row');
@@ -505,7 +530,7 @@
       const deleteBtn = row.querySelector('.btn-delete-row');
       const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
 
-      productSelect.addEventListener('change', function() {
+      productSelect.addEventListener('change', function () {
         const productId = this.value;
         if (productId && productsMap[productId]) {
           // Pre-llenamos el costo unitario con el precio del catálogo si está vacío o es 0
@@ -521,7 +546,7 @@
       qtyInput.addEventListener('input', calculateTotals);
       costInput.addEventListener('input', calculateTotals);
 
-      deleteBtn.addEventListener('click', function() {
+      deleteBtn.addEventListener('click', function () {
         if (deleteCheckbox) {
           deleteCheckbox.checked = true;
           row.style.display = 'none';
@@ -533,7 +558,7 @@
       });
     }
 
-    addRowBtn.addEventListener('click', function() {
+    addRowBtn.addEventListener('click', function () {
       const formIdx = parseInt(totalFormsInput.value);
       const clone = emptyRowTemplate.cloneNode(true);
       clone.removeAttribute('id');
@@ -553,7 +578,7 @@
     const initialRows = tbody.querySelectorAll('.detail-row');
     initialRows.forEach(row => {
       setupRowEvents(row);
-      
+
       const productSelect = row.querySelector('.detail-product');
       const costInput = row.querySelector('.detail-cost');
       if (productSelect.value && !costInput.value) {
