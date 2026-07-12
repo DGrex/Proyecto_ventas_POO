@@ -21,6 +21,7 @@ from shared.decorators import audit_action, group_required
 from django.http import HttpResponse
 from shared.notifications import generate_invoice_pdf, send_invoice_email, send_invoice_whatsapp
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.db.models import ProtectedError
 
 # === REGISTRO ===
 class SignUpView(CreateView):
@@ -398,12 +399,19 @@ class InvoiceDeleteView(LoginRequiredMixin, GroupRequiredMixin, StaffRequiredMix
     success_url = reverse_lazy('billing:invoice_list')
     staff_redirect_url = '/invoices/'
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         self.object = self.get_object()
         invoice_id = self.object.id
         success_url = self.get_success_url()
-        self.object.delete()
-        messages.success(request, f'Factura #{invoice_id} eliminada correctamente!')
+        try:
+            self.object.delete()
+            messages.success(self.request, f'Factura #{invoice_id} eliminada correctamente!')
+        except ProtectedError:
+            messages.error(
+                self.request,
+                f'No se puede eliminar la Factura #{invoice_id} porque tiene cobros registrados. '
+                f'Elimine primero los cobros desde el historial, o considere anular la factura en su lugar.'
+            )
         return redirect(success_url)
 
 
@@ -755,7 +763,6 @@ class CustomerDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMix
 
 
 @login_required
-@xframe_options_sameorigin
 def invoice_comprobante_pdf(request, pk):
     """Sirve el PDF del comprobante para mostrarlo embebido (inline, no como descarga)."""
     invoice = get_object_or_404(
@@ -764,5 +771,6 @@ def invoice_comprobante_pdf(request, pk):
     )
     pdf_bytes = generate_invoice_pdf(invoice)
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    # inline = se muestra en el navegador/iframe; attachment forzaría descarga
     response['Content-Disposition'] = f'inline; filename="factura_{invoice.id}.pdf"'
     return response

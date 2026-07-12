@@ -16,6 +16,8 @@
   .products-table tbody tr:last-child td { border-bottom: none; }
   .products-table tbody tr:hover { background: #fafbfc; }
   .badge-pending { background: #fef3c7; color: #92400e; font-size: .7rem; font-weight: 700; border-radius: 50px; padding: 3px 10px; }
+  .badge-active { background: #d1fae5; color: #065f46; font-size: .7rem; font-weight: 700; border-radius: 50px; padding: 3px 10px; }
+  .badge-inactive { background: #fee2e2; color: #991b1b; font-size: .7rem; font-weight: 700; border-radius: 50px; padding: 3px 10px; }
   .btn-view { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-block; }
   .btn-view:hover { background: #dbeafe; }
   .btn-pay { background: #ecfdf5; color: #047857; border: 1px solid #86efac; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-block; }
@@ -28,7 +30,7 @@
   <div class="page-header d-flex justify-content-between align-items-center mb-4">
     <div>
       <h1><i class="fas fa-hand-holding-usd me-2"></i>Cobros</h1>
-      <p>Facturas a crédito pendientes de pago</p>
+      <p>Facturas a crédito: cuentas por cobrar</p>
     </div>
   </div>
 </div>
@@ -42,6 +44,15 @@
              placeholder="Ej: 1710403333" value="{{ request.GET.dni|default_if_none:'' }}">
     </div>
     <div class="col-md-3">
+      <label for="f-estado" class="filter-label">Estado</label>
+      <select id="f-estado" name="estado" class="form-select form-control-sm">
+        <option value="PENDIENTE" {% if estado_filter == 'PENDIENTE' %}selected{% endif %}>Pendientes</option>
+        <option value="PAGADA" {% if estado_filter == 'PAGADA' %}selected{% endif %}>Pagadas</option>
+        <option value="ANULADA" {% if estado_filter == 'ANULADA' %}selected{% endif %}>Anuladas</option>
+        <option value="TODOS" {% if estado_filter == 'TODOS' %}selected{% endif %}>Todas</option>
+      </select>
+    </div>
+    <div class="col-md-3">
       <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">
         <i class="bi bi-search"></i> Buscar
       </button>
@@ -53,7 +64,7 @@
 </div>
 
 <p class="text-muted small">
-  Se encontraron <strong>{{ paginator.count }}</strong> factura(s) pendiente(s) de cobro.
+  Se encontraron <strong>{{ paginator.count }}</strong> factura(s).
 </p>
 
 <div class="products-table">
@@ -77,20 +88,30 @@
         <td>{{ factura.invoice_date|date:"d/m/Y" }}</td>
         <td class="text-end">${{ factura.total }}</td>
         <td class="text-end text-danger fw-bold">${{ factura.saldo }}</td>
-        <td><span class="badge-pending">Pendiente</span></td>
+        <td>
+          {% if factura.estado == 'PAGADA' %}
+            <span class="badge-active">Pagada</span>
+          {% elif factura.estado == 'ANULADA' %}
+            <span class="badge-inactive">Anulada</span>
+          {% else %}
+            <span class="badge-pending">Pendiente</span>
+          {% endif %}
+        </td>
         <td class="text-center text-nowrap">
           <a href="{% url 'cobros:cobro_list' factura.id %}" class="btn-view" title="Ver Historial">
             <i class="fas fa-history me-1"></i>Historial
           </a>
-          <a href="{% url 'cobros:cobro_create' factura.id %}" class="btn-pay" title="Registrar Pago">
-            <i class="fas fa-dollar-sign me-1"></i>Pagar
-          </a>
+          {% if factura.estado == 'PENDIENTE' %}
+            <a href="{% url 'cobros:cobro_create' factura.id %}" class="btn-pay" title="Registrar Pago">
+              <i class="fas fa-dollar-sign me-1"></i>Pagar
+            </a>
+          {% endif %}
         </td>
       </tr>
       {% empty %}
       <tr>
         <td colspan="7" class="text-center py-4 text-muted">
-          No hay facturas pendientes de cobro.
+          No hay facturas que coincidan con el filtro aplicado.
         </td>
       </tr>
       {% endfor %}

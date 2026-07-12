@@ -18,6 +18,8 @@
   .btn-excel { background: #ecfdf5; color: #047857; border: 1px solid #86efac; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; transition: all .2s; }
   .btn-excel:hover { background: #d1fae5; color: #065f46; }
   .products-table { background: #fff; border: 1px solid #eef1f6; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.03); }
+  .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .products-table table { min-width: 1100px; }
   .products-table thead th { background: #f8fafc; border-bottom: 2px solid #eef1f6; color: #6c757d; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; padding: 13px 16px; white-space: nowrap; }
   .products-table tbody td { padding: 13px 16px; vertical-align: middle; border-bottom: 1px solid #f2f4f7; font-size: .875rem; }
   .products-table tbody tr:last-child td { border-bottom: none; }
@@ -199,6 +201,7 @@
 </p>
 
 <div class="products-table">
+  <div class="table-responsive">
   <table class="table mb-0">
     <thead>
       <tr>
@@ -252,10 +255,15 @@
           </a>
           <a href="{% url 'billing:invoice_update' inv.pk %}" class="btn-edit"><i class="fas fa-pencil-alt me-1"></i>Editar</a>
           <a href="{% url 'billing:invoice_delete' inv.pk %}" class="btn-del"><i class="fas fa-trash-alt me-1"></i>Borrar</a>
-          {% if inv.tipo_pago == 'credito' and inv.estado == 'PENDIENTE' %}
-            <a href="{% url 'cobros:cobro_create' inv.pk %}" class="btn-edit" title="Registrar pago">
-              <i class="fas fa-dollar-sign me-1"></i>Cobrar
+          {% if inv.tipo_pago == 'credito' %}
+            <a href="{% url 'cobros:cobro_list' inv.pk %}" class="btn-edit" title="Ver Historial de Cobros">
+              <i class="fas fa-history me-1"></i>Historial
             </a>
+            {% if inv.estado == 'PENDIENTE' %}
+              <a href="{% url 'cobros:cobro_create' inv.pk %}" class="btn-edit" title="Registrar pago">
+                <i class="fas fa-dollar-sign me-1"></i>Cobrar
+              </a>
+            {% endif %}
           {% endif %}
         </td>
       </tr>
@@ -268,6 +276,7 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </div>
 
 {# ── PAGINACIÓN ───────────────────────────────────────────────── #}

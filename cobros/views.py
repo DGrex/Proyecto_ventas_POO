@@ -12,7 +12,7 @@ from .models import CobroFactura
 from .forms import CobroFacturaForm
 
 
-# 1) Lista de facturas pendientes (solo tipo_pago=credito y estado=PENDIENTE)
+# 1) Lista de facturas a crédito (por defecto muestra PENDIENTE, con filtro de estado)
 @method_decorator(audit_action('LIST_FACTURAS_PENDIENTES'), name='dispatch')
 class FacturaPendienteListView(LoginRequiredMixin, GroupRequiredMixin, ListView):
     group_required = ['Administrador', 'Vendedor']
@@ -22,14 +22,21 @@ class FacturaPendienteListView(LoginRequiredMixin, GroupRequiredMixin, ListView)
     paginate_by = 10
 
     def get_queryset(self):
-        qs = Invoice.objects.filter(
-            tipo_pago='credito',
-            estado='PENDIENTE',
-        ).select_related('customer')
+        qs = Invoice.objects.filter(tipo_pago='credito').select_related('customer')
+
+        estado = self.request.GET.get('estado', 'PENDIENTE')
+        if estado and estado != 'TODOS':
+            qs = qs.filter(estado=estado)
+
         dni = self.request.GET.get('dni')
         if dni:
             qs = qs.filter(customer__dni=dni)
         return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['estado_filter'] = self.request.GET.get('estado', 'PENDIENTE')
+        return ctx
 
 
 # 2) Registrar pago (uno o varios abonos: cada envío del form = un abono)

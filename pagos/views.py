@@ -12,11 +12,12 @@ from .forms import PagoCompraForm
 @group_required('Administrador', 'Analista de Compras')
 @audit_action('LIST_COMPRAS_PENDIENTES')
 def compra_pendiente_list(request):
-    """Lista únicamente las compras a crédito con saldo pendiente."""
-    compras = Purchase.objects.filter(
-        tipo_pago='credito',
-        estado='PENDIENTE',
-    ).select_related('supplier')
+    """Lista las compras a crédito. Por defecto muestra solo PENDIENTE, con filtro de estado."""
+    compras = Purchase.objects.filter(tipo_pago='credito').select_related('supplier')
+
+    estado = request.GET.get('estado', 'PENDIENTE')
+    if estado and estado != 'TODOS':
+        compras = compras.filter(estado=estado)
 
     doc_number = request.GET.get('doc_number')
     if doc_number:
@@ -29,6 +30,7 @@ def compra_pendiente_list(request):
         'page_obj': page_obj,
         'paginator': paginator,
         'compras': page_obj,
+        'estado_filter': estado,
     })
 
 

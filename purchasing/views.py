@@ -12,6 +12,7 @@ from .forms import PurchaseForm, PurchaseDetailFormSet
 from billing.models import Product, Supplier
 from shared.decorators import audit_action, group_required
 from shared.mixins import ExportMixin
+from django.db.models import ProtectedError
  
 
 class PurchaseExportHelper(ExportMixin):
@@ -25,6 +26,9 @@ class PurchaseExportHelper(ExportMixin):
         ('subtotal', 'Subtotal'),
         ('tax', 'Impuesto'),
         ('total', 'Total'),
+        ('tipo_pago', 'Tipo de Pago'),
+        ('saldo', 'Saldo Pendiente'),
+        ('estado', 'Estado'),
     ]
 
 @login_required
@@ -89,6 +93,9 @@ def purchase_list(request):
         ('subtotal', 'Subtotal'),
         ('tax', 'Impuesto'),
         ('total', 'Total'),
+        ('tipo_pago', 'Tipo de Pago'),
+        ('saldo', 'Saldo Pendiente'),
+        ('estado', 'Estado'),
     ]
     columns = request.GET.getlist('columns')
     if not columns:
@@ -271,9 +278,14 @@ def purchase_delete(request, pk):
     purchase = get_object_or_404(Purchase, pk=pk)
     if request.method == 'POST':
         purchase_id = purchase.id
-        # La eliminación en cascada disparará la señal post_delete para cada línea de detalle,
-        # lo que restará las cantidades correspondientes del inventario automáticamente.
-        purchase.delete()
-        messages.success(request, f'Compra #{purchase_id} eliminada correctamente!')
+        try:
+            purchase.delete()
+            messages.success(request, f'Compra #{purchase_id} eliminada correctamente!')
+        except ProtectedError:
+            messages.error(
+                request,
+                f'No se puede eliminar la Compra #{purchase_id} porque tiene pagos registrados. '
+                f'Elimine primero los pagos desde el historial, o considere anular la compra en su lugar.'
+            )
         return redirect('purchasing:purchase_list')
     return render(request, 'purchasing/purchase_confirm_delete.html', {'object': purchase})
