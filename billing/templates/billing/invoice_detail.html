@@ -7,7 +7,8 @@
   <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{% url 'billing:home' %}" class="text-decoration-none">Inicio</a></li>
-      <li class="breadcrumb-item"><a href="{% url 'billing:invoice_list' %}" class="text-decoration-none">Facturas</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'billing:invoice_list' %}" class="text-decoration-none">Facturas</a>
+      </li>
       <li class="breadcrumb-item active" aria-current="page">Factura #{{ invoice.id }}</li>
     </ol>
   </nav>
@@ -16,14 +17,15 @@
     <!-- Encabezado de la tarjeta -->
     <div class="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
       <div>
-        <h3 class="mb-1 fw-bold text-white"><i class="bi bi-receipt me-2 text-warning"></i>Factura #{{ invoice.id }}</h3>
+        <h3 class="mb-1 fw-bold text-white"><i class="bi bi-receipt me-2 text-warning"></i>Factura #{{ invoice.id }}
+        </h3>
         <p class="text-white-50 mb-0 small">Registrado por el Sistema de Ventas</p>
       </div>
       <div>
         {% if invoice.is_active %}
-          <span class="badge bg-success px-3 py-2 fs-7 rounded-pill"><i class="bi bi-check-circle-fill"></i> Activa</span>
+        <span class="badge bg-success px-3 py-2 fs-7 rounded-pill"><i class="bi bi-check-circle-fill"></i> Activa</span>
         {% else %}
-          <span class="badge bg-secondary px-3 py-2 fs-7 rounded-pill"><i class="bi bi-x-circle-fill"></i> Inactiva</span>
+        <span class="badge bg-secondary px-3 py-2 fs-7 rounded-pill"><i class="bi bi-x-circle-fill"></i> Inactiva</span>
         {% endif %}
       </div>
     </div>
@@ -37,12 +39,13 @@
           <h5 class="fw-bold text-dark mb-1">{{ invoice.customer.full_name }}</h5>
           <p class="text-muted mb-0 small"><strong>DNI/RUC:</strong> {{ invoice.customer.dni }}</p>
           {% if invoice.customer.email %}
-            <p class="text-muted mb-0 small"><strong>Email:</strong> {{ invoice.customer.email }}</p>
+          <p class="text-muted mb-0 small"><strong>Email:</strong> {{ invoice.customer.email }}</p>
           {% endif %}
         </div>
         <div class="col-md-6 ps-md-4 text-md-end">
           <span class="text-muted text-uppercase fw-bold small d-block mb-1">Resumen de Facturación</span>
-          <p class="text-muted mb-1 small"><strong>Fecha Emisión:</strong> {{ invoice.invoice_date|date:"d/m/Y H:i" }}</p>
+          <p class="text-muted mb-1 small"><strong>Fecha Emisión:</strong> {{ invoice.invoice_date|date:"d/m/Y H:i" }}
+          </p>
           <p class="text-muted mb-0 small"><strong>Código de Factura:</strong> #{{ invoice.id }}</p>
         </div>
       </div>
@@ -91,6 +94,9 @@
         <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-secondary">
           <i class="bi bi-arrow-left"></i> Volver a la Lista
         </a>
+        <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#voucherModal">
+          <i class="bi bi-receipt"></i> Ver Comprobante
+        </button>
         <a href="{% url 'billing:invoice_update' invoice.pk %}" class="btn btn-warning">
           <i class="bi bi-pencil-square"></i> Editar Factura
         </a>
@@ -100,6 +106,40 @@
       </div>
 
     </div>
+  </div><!-- Modal del Comprobante (PDF embebido) -->
+  <div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title" id="voucherModalLabel">
+            <i class="bi bi-receipt me-2"></i>Comprobante - Factura #{{ invoice.id }}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-0" style="height: 75vh;">
+          <iframe src="{% url 'billing:invoice_comprobante' invoice.pk %}"
+            style="width: 100%; height: 100%; border: none;" title="Comprobante de Factura">
+          </iframe>
+        </div>
+        <div class="modal-footer">
+          <a href="{% url 'billing:invoice_comprobante' invoice.pk %}" target="_blank"
+            class="btn btn-outline-primary rounded-pill px-3">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir en pestaña nueva
+          </a>
+          <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
   </div>
+
+  {% if show_voucher %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const voucherModal = new bootstrap.Modal(document.getElementById('voucherModal'));
+      voucherModal.show();
+    });
+  </script>
+  {% endif %}
+
 </div>
 {% endblock %}

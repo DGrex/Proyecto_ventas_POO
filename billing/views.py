@@ -18,6 +18,9 @@ from .forms import SignUpForm, BrandForm, InvoiceForm, InvoiceDetailFormSet, Pro
 from decimal import Decimal
 from shared.mixins import StaffRequiredMixin, ExportMixin, GroupRequiredMixin
 from shared.decorators import audit_action, group_required
+from django.http import HttpResponse
+from shared.notifications import generate_invoice_pdf, send_invoice_email, send_invoice_whatsapp
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 # === REGISTRO ===
 class SignUpView(CreateView):
@@ -219,39 +222,67 @@ class InvoiceCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
     def form_valid(self, form):
         context = self.get_context_data()
         formset = context['formset']
-        if formset.is_valid():
-            try:
-                with transaction.atomic():
-                    # Guardamos la cabecera
-                    self.object = form.save(commit=False)
-                    self.object.save()
-
-                    # Guardamos los detalles
-                    formset.instance = self.object
-                    formset.save()
-
-                    # Recalculamos los totales de la factura
-                    subtotal = sum(d.subtotal for d in self.object.details.all())
-                    self.object.subtotal = subtotal
-                    self.object.tax = subtotal * Decimal('0.15') # IVA 15%
-                    self.object.total = self.object.subtotal + self.object.tax
-                    if self.object.tipo_pago == 'credito':
-                        self.object.saldo = self.object.total
-                        self.object.estado = 'PENDIENTE'
-                    else:
-                        self.object.saldo = 0
-                        self.object.estado = 'PAGADA'  # el contado se considera cancelado al emitir
-                    self.object.save()
-
-                messages.success(self.request, f'Factura #{self.object.id} creada correctamente! Total: ${self.object.total}')
-                return redirect(self.get_success_url())
-            except Exception as e:
-                form.add_error(None, f"Error al guardar la factura: {str(e)}")
-                return self.form_invalid(form)
-        else:
+        
+        if not formset.is_valid():
             return self.form_invalid(form)
 
+        # 1. Guardamos estrictamente los datos en la Base de Datos
+        try:
+            with transaction.atomic():
+                # Guardamos la cabecera
+                self.object = form.save(commit=False)
+                self.object.save()
 
+                # Guardamos los detalles
+                formset.instance = self.object
+                formset.save()
+
+                # Recalculamos los totales de la factura
+                subtotal = sum(d.subtotal for d in self.object.details.all())
+                self.object.subtotal = subtotal
+                self.object.tax = subtotal * Decimal('0.15') # IVA 15% (Ecuador)
+                self.object.total = self.object.subtotal + self.object.tax
+                
+                if self.object.tipo_pago == 'credito':
+                    self.object.saldo = self.object.total
+                    self.object.estado = 'PENDIENTE'
+                else:
+                    self.object.saldo = 0
+                    self.object.estado = 'PAGADA'
+                
+                self.object.save()
+                
+        except Exception as e:
+            # Si algo falla guardando en la BD, mostramos el error y recargamos el formulario
+            messages.error(self.request, f"Error al guardar la factura: {e}")
+            return self.form_invalid(form)
+
+        # 2. ── Fuera de la transacción y del Try de la BD ──
+        # Si llegamos aquí, la factura YA ESTÁ guardada a salvo en la base de datos.
+        try:
+            pdf_bytes = generate_invoice_pdf(self.object)
+
+            # Envío de Correo
+            ok_email, msg_email = send_invoice_email(self.object, pdf_bytes)
+            if ok_email:
+                messages.info(self.request, '📧 Comprobante enviado al correo del cliente.')
+            else:
+                messages.warning(self.request, f'No se pudo enviar el correo: {msg_email}')
+
+            # Envío de WhatsApp
+            ok_wa, msg_wa = send_invoice_whatsapp(self.object)
+            if ok_wa:
+                messages.info(self.request, '📱 Notificación enviada por WhatsApp.')
+            else:
+                messages.warning(self.request, f'No se pudo enviar WhatsApp: {msg_wa}')
+                
+        except Exception as e_notif:
+            # Si fallan los correos o las APIs de WhatsApp, el usuario no lo nota críticamente
+            messages.warning(self.request, f'La factura se creó, pero hubo un problema con las notificaciones: {e_notif}')
+
+        # 3. Éxito y redirección final (Siempre debe estar al ras de la función)
+        messages.success(self.request, f'Factura #{self.object.id} creada correctamente! Total: ${self.object.total}')
+        return redirect('billing:invoice_detail_voucher', pk=self.object.pk)
 @method_decorator(audit_action('UPDATE_INVOICE'), name='dispatch')
 class InvoiceUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
     group_required = ['Administrador', 'Vendedor']
@@ -299,34 +330,44 @@ class InvoiceUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
     def form_valid(self, form):
         context = self.get_context_data()
         formset = context['formset']
-        print("FORM ERRORS:", form.errors)
-        print("FORMSET ERRORS:", formset.errors)
-        print("FORMSET NON-FORM ERRORS:", formset.non_form_errors())
-        formset = context['formset']
         if formset.is_valid():
             try:
                 with transaction.atomic():
-                    # Guardamos la cabecera
-                    self.object = form.save()
+                    self.object = form.save(commit=False)
+                    self.object.save()
 
-                    # Guardamos los detalles
+                    formset.instance = self.object
                     formset.save()
 
-                    # Recalculamos los totales de la factura
                     subtotal = sum(d.subtotal for d in self.object.details.all())
                     self.object.subtotal = subtotal
-                    self.object.tax = subtotal * Decimal('0.15') # IVA 15%
+                    self.object.tax = subtotal * Decimal('0.15')
                     self.object.total = self.object.subtotal + self.object.tax
                     if self.object.tipo_pago == 'credito':
                         self.object.saldo = self.object.total
                         self.object.estado = 'PENDIENTE'
                     else:
                         self.object.saldo = 0
-                        self.object.estado = 'PAGADA'  # el contado se considera cancelado al emitir
+                        self.object.estado = 'PAGADA'
                     self.object.save()
 
-                messages.success(self.request, f'Factura #{self.object.id} actualizada correctamente! Total: ${self.object.total}')
-                return redirect(self.get_success_url())
+                # ── Notificaciones (fuera de la transacción: si fallan, la factura ya está guardada) ──
+                pdf_bytes = generate_invoice_pdf(self.object)
+
+                ok_email, msg_email = send_invoice_email(self.object, pdf_bytes)
+                if ok_email:
+                    messages.info(self.request, '📧 Comprobante enviado al correo del cliente.')
+                else:
+                    messages.warning(self.request, f'No se pudo enviar el correo: {msg_email}')
+
+                ok_wa, msg_wa = send_invoice_whatsapp(self.object)
+                if ok_wa:
+                    messages.info(self.request, '📱 Notificación enviada por WhatsApp.')
+                else:
+                    messages.warning(self.request, f'No se pudo enviar WhatsApp: {msg_wa}')
+
+                messages.success(self.request, f'Factura #{self.object.id} creada correctamente! Total: ${self.object.total}')
+                return redirect('billing:invoice_detail_voucher', pk=self.object.pk)
             except Exception as e:
                 form.add_error(None, f"Error al guardar la factura: {str(e)}")
                 return self.form_invalid(form)
@@ -344,6 +385,10 @@ class InvoiceDetailView(LoginRequiredMixin, GroupRequiredMixin, DetailView):
     def get_queryset(self):
         return super().get_queryset().select_related('customer').prefetch_related('details__product')
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['show_voucher'] = (self.request.resolver_match.url_name == 'invoice_detail_voucher')
+        return ctx
 
 @method_decorator(audit_action('DELETE_INVOICE'), name='dispatch')
 class InvoiceDeleteView(LoginRequiredMixin, GroupRequiredMixin, StaffRequiredMixin, DeleteView):
@@ -707,3 +752,17 @@ class CustomerDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMix
     template_name = 'billing/customer_confirm_delete.html'
     success_url = reverse_lazy('billing:customer_list')
     staff_redirect_url = '/customers/'
+
+
+@login_required
+@xframe_options_sameorigin
+def invoice_comprobante_pdf(request, pk):
+    """Sirve el PDF del comprobante para mostrarlo embebido (inline, no como descarga)."""
+    invoice = get_object_or_404(
+        Invoice.objects.select_related('customer').prefetch_related('details__product'),
+        pk=pk
+    )
+    pdf_bytes = generate_invoice_pdf(invoice)
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="factura_{invoice.id}.pdf"'
+    return response
