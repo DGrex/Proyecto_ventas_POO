@@ -39,18 +39,27 @@ class Purchase(models.Model):
     def __str__(self):
         return f'Compra #{self.id} - {self.supplier}'
 
+from django.core.validators import MinValueValidator
+
 class PurchaseDetail(models.Model):
-    """Líneas de compra. Cada fila es un producto adquirido."""
     purchase = models.ForeignKey(
         Purchase, on_delete=models.CASCADE, related_name='details', verbose_name='Compra'
     )
     product = models.ForeignKey(
         Product, on_delete=models.PROTECT, related_name='purchase_details', verbose_name='Producto'
     )
-    quantity = models.PositiveIntegerField(default=1, verbose_name='Cantidad')
-    unit_cost = models.DecimalField(max_digits=12, decimal_places=2, verbose_name='Costo Unitario')
+    quantity = models.PositiveIntegerField(
+        default=1,
+        validators=[MinValueValidator(1, message='La cantidad debe ser mayor que cero.')],
+        verbose_name='Cantidad'
+    )
+    unit_cost = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'), message='El costo unitario debe ser mayor que cero.')],
+        verbose_name='Costo Unitario'
+    )
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Subtotal')
-
+    
     class Meta:
         verbose_name = 'Detalle de Compra'
         verbose_name_plural = 'Detalles de Compra'

@@ -194,13 +194,14 @@ class CustomerForm(forms.ModelForm):
 
     class Meta:
         model = Customer
-        fields = ['dni', 'first_name', 'last_name', 'email', 'phone', 'address', 'is_active']
+        fields = ['dni', 'first_name', 'last_name', 'email', 'phone', 'address', 'is_active','whatsapp_apikey']
         labels = {
             'dni': 'DNI / RUC',
             'first_name': 'Nombres',
             'last_name': 'Apellidos',
             'email': 'Correo Electrónico',
             'phone': 'Teléfono',
+             'whatsapp_apikey': 'WhatsApp API Key',
             'address': 'Dirección',
             'is_active': 'Estado activo',
         }
@@ -227,6 +228,11 @@ class CustomerForm(forms.ModelForm):
                 'placeholder': 'Ej: 0991234567',
                 'maxlength': '20',
             }),
+            'whatsapp_apikey': forms.TextInput(attrs={
+                'class': 'form-control form-control-premium',
+                'placeholder': 'Ej: 123456 (opcional)',
+                'maxlength': '20',
+            }),
             'address': forms.Textarea(attrs={
                 'class': 'form-control form-control-premium',
                 'rows': 3,
@@ -243,6 +249,7 @@ class CustomerForm(forms.ModelForm):
             'last_name': 'Apellido(s) completo(s) del cliente.',
             'email': 'Correo electrónico de contacto (opcional).',
             'phone': 'Número de teléfono o celular de contacto (opcional).',
+            'whatsapp_apikey': 'Opcional, El cliente debe suscribirse primero al bot.',
             'address': 'Dirección física o postal del cliente (opcional).',
             'is_active': 'Define si el cliente está activo en el sistema.',
         }

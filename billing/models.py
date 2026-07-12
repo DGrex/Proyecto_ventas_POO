@@ -82,16 +82,21 @@ class Product(models.Model):
         return static('billing/img/no-photo.svg')
 
 class Customer(models.Model):
-    """Clientes. OneToOne con CustomerProfile."""
     dni = models.CharField(max_length=13, unique=True, verbose_name='DNI/RUC', validators=[validate_cedula_ec])
-    first_name = models.CharField(max_length=100, verbose_name = 'Nombres')
-    last_name = models.CharField(max_length=100, verbose_name = 'Apellidos')
-    email = models.EmailField(blank=True, null=True, verbose_name = 'Correo Electronico')
-    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name = 'Teléfono')
-    address = models.TextField(blank=True, null=True, verbose_name = 'Dirección')
-    is_active = models.BooleanField(default=True, verbose_name = 'Activo')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name = 'Creado el')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name = 'Actualizado el')
+    first_name = models.CharField(max_length=100, verbose_name='Nombres')
+    last_name = models.CharField(max_length=100, verbose_name='Apellidos')
+    email = models.EmailField(blank=True, null=True, verbose_name='Correo Electronico')
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name='Teléfono')
+    address = models.TextField(blank=True, null=True, verbose_name='Dirección')
+    whatsapp_apikey = models.CharField(
+        max_length=20, blank=True, null=True,
+        verbose_name='WhatsApp API Key (CallMeBot)',
+        help_text='Solo necesaria si el cliente se suscribió a CallMeBot para recibir notificaciones.'
+    )
+    is_active = models.BooleanField(default=True, verbose_name='Activo')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Creado el')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Actualizado el')
+   
     class Meta:
         ordering = ['last_name', 'first_name']
     def __str__(self): return f'{self.last_name} {self.first_name}'

@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Avg, Q
+from django.db.models import Avg, Q, Sum
 from .models import Purchase, PurchaseDetail
 from .forms import PurchaseForm, PurchaseDetailFormSet
 from billing.models import Product, Supplier
@@ -132,6 +132,14 @@ def purchase_create(request):
                     purchase.subtotal = subtotal
                     purchase.tax = subtotal * Decimal('0.15')  # IVA 15%
                     purchase.total = purchase.subtotal + purchase.tax
+
+                    if purchase.tipo_pago == 'credito':
+                        purchase.saldo = purchase.total
+                        purchase.estado = 'PENDIENTE'
+                    else:
+                        purchase.saldo = 0
+                        purchase.estado = 'PAGADA'
+
                     purchase.save()
 
                 messages.success(request, f'Compra #{purchase.id} registrada exitosamente! Total: ${purchase.total}')
@@ -182,12 +190,23 @@ def purchase_update(request, pk):
                     # Guardamos detalles (este save() ajusta las diferencias de stock en la BD)
                     formset.save()
 
-                    # Recalculamos los totales de la compra
-                    subtotal = sum(d.subtotal for d in purchase.details.all())
-                    purchase.subtotal = subtotal
-                    purchase.tax = subtotal * Decimal('0.15')  # IVA 15%
-                    purchase.total = purchase.subtotal + purchase.tax
-                    purchase.save()
+                # Recalculamos los totales de la compra
+                subtotal = sum(d.subtotal for d in purchase.details.all())
+                purchase.subtotal = subtotal
+                purchase.tax = subtotal * Decimal('0.15')  # IVA 15%
+                purchase.total = purchase.subtotal + purchase.tax
+
+                if purchase.estado != 'ANULADA':
+                    if purchase.tipo_pago == 'credito':
+                        total_pagado = purchase.pagos.aggregate(total=Sum('valor'))['total'] or Decimal('0')
+                        nuevo_saldo = purchase.total - total_pagado
+                        purchase.saldo = nuevo_saldo if nuevo_saldo > 0 else Decimal('0')
+                        purchase.estado = 'PAGADA' if purchase.saldo == Decimal('0') else 'PENDIENTE'
+                    else:
+                        purchase.saldo = 0
+                        purchase.estado = 'PAGADA'
+
+                purchase.save()
 
                 messages.success(request, f'Compra #{purchase.id} actualizada correctamente! Total: ${purchase.total}')
                 return redirect('purchasing:purchase_list')

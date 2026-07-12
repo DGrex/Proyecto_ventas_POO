@@ -33,16 +33,37 @@ class PurchaseForm(forms.ModelForm):
                     if 'is-invalid' not in current_class:
                         self.fields[field_name].widget.attrs['class'] = f"{current_class} is-invalid"
 
+class PurchaseDetailForm(forms.ModelForm):
+    class Meta:
+        model = PurchaseDetail
+        fields = ['product', 'quantity', 'unit_cost']
+
+    def clean_quantity(self):
+        qty = self.cleaned_data.get('quantity')
+        if qty is None or qty <= 0:
+            raise forms.ValidationError('La cantidad debe ser mayor que cero.')
+        return qty
+
+    def clean_unit_cost(self):
+        cost = self.cleaned_data.get('unit_cost')
+        if cost is None or cost <= 0:
+            raise forms.ValidationError('El costo unitario debe ser mayor que cero.')
+        return cost
 
 PurchaseDetailFormSet = inlineformset_factory(
     Purchase,
     PurchaseDetail,
     fields=['product', 'quantity', 'unit_cost'],
-    extra=1,  # Usamos 1 fila vacía inicial
+    extra=0,
     can_delete=True,
+    min_num=1,
+    validate_min=True,
     widgets={
         'product': forms.Select(attrs={'class': 'form-select form-select-premium detail-product'}),
         'quantity': forms.NumberInput(attrs={'class': 'form-control form-control-premium detail-quantity', 'min': 1}),
-        'unit_cost': forms.NumberInput(attrs={'class': 'form-control form-control-premium detail-cost', 'step': '0.01', 'placeholder': '0.00'}),
+        'unit_cost': forms.NumberInput(attrs={
+            'class': 'form-control form-control-premium detail-cost',
+            'step': '0.01', 'min': '0.01', 'placeholder': '0.00'
+        }),
     }
 )
