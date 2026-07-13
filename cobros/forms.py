@@ -1,18 +1,19 @@
 from django import forms
+from django.utils import timezone
 from .models import CobroFactura
 
 
 class CobroFacturaForm(forms.ModelForm):
     class Meta:
         model = CobroFactura
-        fields = ['fecha', 'valor', 'observacion']
+        # 'fecha' NO es editable por el usuario: la asigna el sistema
+        # automáticamente (ver __init__) y nunca se muestra como input.
+        fields = ['valor', 'observacion']
         labels = {
-            'fecha': 'Fecha de Pago',
             'valor': 'Valor a Abonar ($)',
             'observacion': 'Observación',
         }
         widgets = {
-            'fecha': forms.DateInput(attrs={'type': 'date', 'class': 'form-control form-control-premium'}),
             'valor': forms.NumberInput(attrs={'class': 'form-control form-control-premium', 'step': '0.01', 'min': '0.01'}),
             'observacion': forms.Textarea(attrs={'class': 'form-control form-control-premium', 'rows': 2}),
         }
@@ -21,7 +22,12 @@ class CobroFacturaForm(forms.ModelForm):
         self.factura = factura
         super().__init__(*args, **kwargs)
         if factura and not self.instance.pk:
-            self.instance.factura = factura 
+            self.instance.factura = factura
+        # Al crear un pago nuevo, la fecha siempre es la del sistema (hoy).
+        # Al editar uno existente, se conserva la fecha original y tampoco
+        # es editable desde el formulario.
+        if not self.instance.pk:
+            self.instance.fecha = timezone.localdate()
 
     def clean_valor(self):
         valor = self.cleaned_data.get('valor')

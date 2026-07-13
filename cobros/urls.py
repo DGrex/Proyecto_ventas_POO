@@ -9,4 +9,5 @@ urlpatterns = [
     path('factura/<int:factura_id>/historial/', views.CobroListView.as_view(), name='cobro_list'),
     path('pago/<int:pk>/editar/', views.CobroUpdateView.as_view(), name='cobro_update'),
     path('pago/<int:pk>/eliminar/', views.CobroDeleteView.as_view(), name='cobro_delete'),
+    path('pago/<int:pk>/comprobante/', views.cobro_comprobante_pdf, name='cobro_comprobante'),
 ]

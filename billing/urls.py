@@ -3,7 +3,6 @@ from . import views
 app_name = 'billing'
 urlpatterns = [
     path('', views.home, name='home'),
-    path('signup/', views.SignUpView.as_view(), name='signup'),
     # Brand (CBV)
     path('brands/', views.BrandListView.as_view(), name='brand_list'),
     path('brands/create/', views.brand_create, name='brand_create'),

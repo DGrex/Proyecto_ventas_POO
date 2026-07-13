@@ -9,4 +9,5 @@ urlpatterns = [
     path('compra/<int:compra_id>/historial/', views.pago_list, name='pago_list'),
     path('pago/<int:pk>/editar/', views.pago_update, name='pago_update'),
     path('pago/<int:pk>/eliminar/', views.pago_delete, name='pago_delete'),
+    path('pago/<int:pk>/comprobante/', views.pago_comprobante_pdf, name='pago_comprobante'),
 ]

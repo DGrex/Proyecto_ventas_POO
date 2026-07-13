@@ -5,11 +5,13 @@ app_name = 'security'
 
 urlpatterns = [
     # Autenticación
-    path('register/', views.RegisterView.as_view(), name='register'),
+    # NOTA: se eliminó la ruta pública de auto-registro ('register/').
+    # Los usuarios ahora se crean únicamente desde 'users/create/' (solo Administrador).
     path('login/', views.SecurityLoginView.as_view(), name='login'),
     path('logout/', views.SecurityLogoutView.as_view(), name='logout'),
 
     # Usuarios
+    path('users/create/', views.UserCreateView.as_view(), name='user_create'),
     path('users/', views.UserListView.as_view(), name='user_list'),
     path('users/<int:pk>/edit/', views.UserUpdateView.as_view(), name='user_update'),
     path('users/<int:pk>/delete/', views.UserDeleteView.as_view(), name='user_delete'),

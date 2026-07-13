@@ -78,6 +78,10 @@
           <td class="text-end fw-bold">${{ cobro.valor }}</td>
           <td>{{ cobro.observacion|default:"—" }}</td>
           <td class="text-center text-nowrap">
+            <button type="button" class="btn-edit" style="border:1px solid #bfdbfe; cursor:pointer;"
+                    onclick="verComprobante('{% url 'cobros:cobro_comprobante' cobro.pk %}')">
+              <i class="fas fa-receipt me-1"></i>Comprobante
+            </button>
             <a href="{% url 'cobros:cobro_update' cobro.pk %}" class="btn-edit">
               <i class="fas fa-pencil-alt me-1"></i>Editar
             </a>
@@ -102,5 +106,47 @@
       <i class="fas fa-arrow-left me-1"></i>Volver al listado
     </a>
   </div>
+
+  <!-- Modal del Comprobante de Abono (PDF embebido) -->
+  <div class="modal fade" id="comprobanteModal" tabindex="-1" aria-labelledby="comprobanteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title" id="comprobanteModalLabel">
+            <i class="bi bi-receipt me-2"></i>Comprobante de Abono
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-0" style="height: 75vh;">
+          <iframe id="comprobanteIframe" src="" style="width: 100%; height: 100%; border: none;"
+                  title="Comprobante de Abono"></iframe>
+        </div>
+        <div class="modal-footer">
+          <a id="comprobanteAbrirTab" href="#" target="_blank" class="btn btn-outline-primary rounded-pill px-3">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir en pestaña nueva
+          </a>
+          <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function verComprobante(url) {
+      document.getElementById('comprobanteIframe').src = url;
+      document.getElementById('comprobanteAbrirTab').href = url;
+      const modal = new bootstrap.Modal(document.getElementById('comprobanteModal'));
+      modal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const params = new URLSearchParams(window.location.search);
+      const voucherId = params.get('voucher');
+      if (voucherId) {
+        verComprobante('/cobros/pago/' + voucherId + '/comprobante/');
+      }
+    });
+  </script>
+
 </div>
 {% endblock %}

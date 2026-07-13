@@ -1,0 +1,163 @@
+{% extends 'billing/base.html' %}
+{% block title %}Crear usuario{% endblock %}
+{% block content %}
+<style>
+  /* Estilos propios de esta vista (los .premium-card* generales ya están en base.html) */
+  .role-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .role-chip {
+    position: relative;
+  }
+
+  .role-chip input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .role-chip label {
+    display: inline-block;
+    padding: 0.5rem 1.1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #334155;
+    background-color: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .role-chip input[type="checkbox"]:checked + label {
+    border-color: #2563eb;
+    background-color: #2563eb;
+    color: #ffffff;
+  }
+
+  .form-switch-premium {
+    padding-left: 3rem;
+  }
+
+  .form-switch-premium .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    margin-left: -3rem;
+    cursor: pointer;
+  }
+</style>
+
+<div class="row justify-content-center">
+  <div class="col-xl-8 col-lg-9">
+    <div class="premium-card">
+
+      <!-- Encabezado -->
+      <div class="premium-card-header d-flex justify-content-between align-items-center text-white">
+        <div>
+          <h4 class="mb-1 fw-bold text-white"><i class="bi bi-person-plus-fill me-2"></i>Crear usuario</h4>
+          <p class="text-white-50 mb-0 small">El usuario recibirá un correo para crear su propia contraseña.</p>
+        </div>
+        <a href="{% url 'security:user_list' %}" class="btn btn-outline-light btn-sm px-3 rounded-pill">
+          <i class="bi bi-arrow-left"></i> Volver al listado
+        </a>
+      </div>
+
+      <!-- Cuerpo -->
+      <div class="premium-card-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger rounded-3 mb-4" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <!-- Datos de la cuenta -->
+          <p class="field-group-title text-uppercase small fw-bold text-secondary border-bottom pb-2 mb-3">
+            <i class="bi bi-person-badge-fill me-1"></i> Datos de la cuenta
+          </p>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label form-label-premium" for="{{ form.username.id_for_label }}">
+                {{ form.username.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.username }}
+              {% if form.username.help_text %}<div class="form-text text-muted small">{{ form.username.help_text }}</div>{% endif %}
+              {% for error in form.username.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-premium" for="{{ form.email.id_for_label }}">
+                {{ form.email.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.email }}
+              {% for error in form.email.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-premium" for="{{ form.first_name.id_for_label }}">
+                {{ form.first_name.label }}
+              </label>
+              {{ form.first_name }}
+              {% for error in form.first_name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-premium" for="{{ form.last_name.id_for_label }}">
+                {{ form.last_name.label }}
+              </label>
+              {{ form.last_name }}
+              {% for error in form.last_name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <!-- Roles -->
+          <p class="field-group-title text-uppercase small fw-bold text-secondary border-bottom pb-2 mb-3">
+            <i class="bi bi-people-fill me-1"></i> Roles asignados
+          </p>
+          <div class="mb-4">
+            <div class="role-options">
+              {% for checkbox in form.groups %}
+              <div class="role-chip">
+                {{ checkbox.tag }}
+                <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+              </div>
+              {% empty %}
+              <p class="text-muted small mb-0">No hay roles creados todavía. Puedes crearlos en Seguridad → Roles.</p>
+              {% endfor %}
+            </div>
+            {% if form.groups.help_text %}<div class="form-text text-muted small mt-2">{{ form.groups.help_text }}</div>{% endif %}
+            {% for error in form.groups.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+          </div>
+
+          <!-- Estado -->
+          <div class="mb-4">
+            <p class="form-label form-label-premium mb-2">Estado de la cuenta</p>
+            <div class="form-check form-switch form-switch-premium">
+              {{ form.is_active }}
+              <label class="form-check-label fw-semibold text-secondary" for="{{ form.is_active.id_for_label }}">
+                Usuario activo (puede iniciar sesión)
+              </label>
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div class="d-flex flex-wrap gap-2 border-top pt-4">
+            <button type="submit" class="btn btn-premium-save">
+              <i class="bi bi-save me-1"></i> Crear usuario
+            </button>
+            <a href="{% url 'security:user_list' %}" class="btn btn-premium-cancel btn-outline-secondary">Cancelar</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

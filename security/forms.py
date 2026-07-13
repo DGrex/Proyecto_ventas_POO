@@ -1,33 +1,46 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group, Permission
 
-# === 1. REGISTRO DE USUARIO CON ROL ===
-class UserRegisterForm(UserCreationForm):
-    """Registro público: el usuario elige su rol al registrarse."""
+# === 1. CREACIÓN DE USUARIO (SOLO ADMINISTRADOR) ===
+class AdminUserCreateForm(forms.ModelForm):
+    """
+    Creación de usuarios. NO es un registro público: solo puede
+    usarse desde una vista protegida con AdminOnlyMixin.
+
+    El Administrador NO define la contraseña: el usuario la crea él
+    mismo desde un enlace de activación que se le envía por correo
+    (mismo mecanismo de "recuperar contraseña" de Django).
+    El Administrador asigna el/los rol(es) directamente al crear la cuenta.
+    """
     email = forms.EmailField(required=True)
-    role = forms.ModelChoiceField(
+    groups = forms.ModelMultipleChoiceField(
         queryset=Group.objects.all(),
-        required=True,
-        label='Role',
-        empty_label='-- Select a role --',
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        label='Roles',
     )
 
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email',
-                  'password1', 'password2', 'role']
+                  'groups', 'is_active']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for f in self.fields:
-            self.fields[f].widget.attrs['class'] = 'form-control'
+            if f == 'is_active':
+                self.fields[f].widget.attrs['class'] = 'form-check-input'
+            elif f != 'groups':
+                self.fields[f].widget.attrs['class'] = 'form-control'
 
     def save(self, commit=True):
-        user = super().save(commit)
+        user = super().save(commit=False)
+        # Sin contraseña utilizable hasta que el usuario la defina desde
+        # el enlace de activación que recibe por correo.
+        user.set_unusable_password()
         if commit:
-            # Asignar el rol elegido al nuevo usuario
-            user.groups.add(self.cleaned_data['role'])
+            user.save()
+            user.groups.set(self.cleaned_data['groups'])
         return user
 
 # === 2. EDICIÓN DE USUARIO (asignar roles) ===

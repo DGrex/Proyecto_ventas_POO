@@ -1,28 +1,11 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from .models import Brand, Product, ProductGroup, Supplier, Invoice, InvoiceDetail, Customer
 
+# NOTA: el auto-registro público (antes SignUpForm) fue eliminado.
+# La creación de usuarios ahora es exclusiva del Administrador,
+# ver security.forms.AdminUserCreateForm.
 
-class SignUpForm(UserCreationForm):
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class':'form-control'}))
-    first_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class':'form-control'}))
-    last_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class':'form-control'}))
-    class Meta:
-        model = User
-        fields = ['username','first_name','last_name','email','password1','password2']
-        labels = {'username':'Nombre de usuario', 'first_name':'Nombre', 'last_name':'Apellido', 'email':'Correo electrónico', 'password1':'Contraseña', 'password2':'Confirmar contraseña'}
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['username'].label = 'Nombre de usuario'
-        self.fields['first_name'].label = 'Nombre'
-        self.fields['last_name'].label = 'Apellido'
-        self.fields['email'].label = 'Correo electrónico'
-        self.fields['password1'].label = 'Contraseña'
-        self.fields['password2'].label = 'Confirmar contraseña'
-        
-        for f in self.fields: self.fields[f].widget.attrs['class'] = 'form-control'
 
 class BrandForm(forms.ModelForm):
     class Meta:

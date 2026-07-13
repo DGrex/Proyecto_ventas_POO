@@ -8,13 +8,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
-from django.contrib.auth import login
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from .models import *
 from purchasing.models import Purchase
-from .forms import SignUpForm, BrandForm, InvoiceForm, InvoiceDetailFormSet, ProductForm, CustomerForm
+from .forms import BrandForm, InvoiceForm, InvoiceDetailFormSet, ProductForm, CustomerForm
 from decimal import Decimal
 from shared.mixins import StaffRequiredMixin, ExportMixin, GroupRequiredMixin
 from shared.decorators import audit_action, group_required
@@ -22,16 +21,10 @@ from django.http import HttpResponse
 from shared.notifications import generate_invoice_pdf, send_invoice_email, send_invoice_whatsapp
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.db.models import ProtectedError
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
-# === REGISTRO ===
-class SignUpView(CreateView):
-    form_class = SignUpForm
-    template_name = 'registration/signup.html'
-    success_url = reverse_lazy('billing:brand_list')
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        login(self.request, self.object)
-        return response
+# NOTA: se eliminó el auto-registro público (antes SignUpView). La creación
+# de usuarios ahora es exclusiva del Administrador (ver security.UserCreateView).
 
 # === HOME / BRAND (FBV) ===
 @login_required
@@ -762,7 +755,9 @@ class CustomerDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMix
     staff_redirect_url = '/customers/'
 
 
+
 @login_required
+@xframe_options_sameorigin
 def invoice_comprobante_pdf(request, pk):
     """Sirve el PDF del comprobante para mostrarlo embebido (inline, no como descarga)."""
     invoice = get_object_or_404(
@@ -771,6 +766,5 @@ def invoice_comprobante_pdf(request, pk):
     )
     pdf_bytes = generate_invoice_pdf(invoice)
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
-    # inline = se muestra en el navegador/iframe; attachment forzaría descarga
     response['Content-Disposition'] = f'inline; filename="factura_{invoice.id}.pdf"'
     return response

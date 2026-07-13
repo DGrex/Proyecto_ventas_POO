@@ -54,11 +54,10 @@
           {% csrf_token %}
 
           <div class="mb-3">
-            <label for="{{ form.fecha.id_for_label }}" class="form-label fw-semibold">Fecha de Pago</label>
-            {{ form.fecha }}
-            {% if form.fecha.errors %}
-              <div class="invalid-feedback d-block">{{ form.fecha.errors }}</div>
-            {% endif %}
+            <label class="form-label fw-semibold">Fecha de Pago</label>
+            <input type="text" class="form-control form-control-premium bg-light text-muted"
+                   value="{{ form.instance.fecha|date:'d/m/Y' }}" readonly>
+            <div class="form-text text-muted small">La fecha la asigna el sistema automáticamente y no se puede modificar.</div>
           </div>
 
           <div class="mb-3">
