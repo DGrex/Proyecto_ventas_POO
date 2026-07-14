@@ -5,14 +5,26 @@ from billing.models import Invoice
 
 
 class CobroFactura(models.Model):
+    METODO_PAGO = [
+        ('efectivo', 'Efectivo'),
+        ('transferencia', 'Transferencia'),
+        ('paypal', 'PayPal'),
+        ('tarjeta', 'Tarjeta'),
+    ]
+
     factura = models.ForeignKey(
-        Invoice,
-        on_delete=models.PROTECT,
-        related_name='cobros',
-        verbose_name='Factura'
+        Invoice, on_delete=models.PROTECT, related_name='cobros', verbose_name='Factura'
     )
     fecha = models.DateField(verbose_name='Fecha de Pago')
     valor = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Valor Abonado')
+    metodo_pago = models.CharField(
+        max_length=15, choices=METODO_PAGO, default='efectivo', verbose_name='Método de Pago'
+    )
+    referencia_externa = models.CharField(
+        max_length=100, blank=True, null=True,
+        verbose_name='Referencia Externa',
+        help_text='ID de transacción de PayPal u otro medio externo, para trazabilidad.'
+    )
     observacion = models.TextField(blank=True, verbose_name='Observación')
     creado_en = models.DateTimeField(auto_now_add=True)
 

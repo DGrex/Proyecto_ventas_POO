@@ -8,7 +8,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 
-from shared.mixins import GroupRequiredMixin
+from shared.mixins import GroupRequiredMixin, PermissionOrRedirectMixin
 from shared.notifications import send_user_activation_email
 from .forms import AdminUserCreateForm, UserUpdateForm, GroupForm, PermissionForm
 
@@ -31,7 +31,8 @@ class SecurityLogoutView(LogoutView):
     pass
 
 # === USUARIOS (solo Administrador) ===
-class UserCreateView(AdminOnlyMixin, CreateView):
+class UserCreateView(AdminOnlyMixin, PermissionOrRedirectMixin, CreateView):
+    permission_required = 'auth.add_user'
     """Alta de usuarios. Solo accesible por el rol Administrador."""
     model = User
     form_class = AdminUserCreateForm
@@ -57,65 +58,116 @@ class UserCreateView(AdminOnlyMixin, CreateView):
             )
         return response
 
-class UserListView(AdminOnlyMixin, ListView):
+class UserListView(AdminOnlyMixin, PermissionOrRedirectMixin, ListView):
+    permission_required = 'auth.view_user'
     model = User
     template_name = 'security/user_list.html'
     context_object_name = 'items'
 
-class UserUpdateView(AdminOnlyMixin, UpdateView):
+class UserUpdateView(AdminOnlyMixin, PermissionOrRedirectMixin, UpdateView):
+    permission_required = 'auth.change_user'
     model = User
     form_class = UserUpdateForm
     template_name = 'security/user_form.html'
     success_url = reverse_lazy('security:user_list')
 
-class UserDeleteView(AdminOnlyMixin, DeleteView):
+class UserDeleteView(AdminOnlyMixin, PermissionOrRedirectMixin, DeleteView):
+    permission_required = 'auth.delete_user'
     model = User
     template_name = 'security/confirm_delete.html'
     success_url = reverse_lazy('security:user_list')
 
 # === ROLES / GROUP (solo Administrador) ===
-class GroupListView(AdminOnlyMixin, ListView):
+class GroupListView(AdminOnlyMixin, PermissionOrRedirectMixin, ListView):
+    permission_required = 'auth.view_group'
     model = Group
     template_name = 'security/group_list.html'
     context_object_name = 'items'
+   
+   
+    
+APP_LABELS_ES = {
+'billing': 'Facturación y Catálogo',
+'cobros': 'Cobros (Cuentas por Cobrar)',
+'pagos': 'Pagos (Cuentas por Pagar)',
+'purchasing': 'Compras',
+'auth': 'Usuarios y Roles',
+}
 
-class GroupCreateView(AdminOnlyMixin, CreateView):
+class GroupCreateView(AdminOnlyMixin, PermissionOrRedirectMixin, CreateView):
+    permission_required = 'auth.add_group'
     model = Group
     form_class = GroupForm
     template_name = 'security/group_form.html'
     success_url = reverse_lazy('security:group_list')
 
-class GroupUpdateView(AdminOnlyMixin, UpdateView):
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        form = ctx['form']
+        perms_qs = form.fields['permissions'].queryset
+        checkboxes = list(form['permissions'])
+
+        grouped = {}
+        for perm, checkbox in zip(perms_qs, checkboxes):
+            label = APP_LABELS_ES.get(perm.content_type.app_label, perm.content_type.app_label.title())
+            grouped.setdefault(label, []).append(checkbox)
+
+        ctx['grouped_permissions'] = grouped
+        return ctx
+
+class GroupUpdateView(AdminOnlyMixin, PermissionOrRedirectMixin, UpdateView):
+    permission_required = 'auth.change_group'
     model = Group
     form_class = GroupForm
     template_name = 'security/group_form.html'
     success_url = reverse_lazy('security:group_list')
 
-class GroupDeleteView(AdminOnlyMixin, DeleteView):
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        form = ctx['form']
+        perms_qs = form.fields['permissions'].queryset
+        checkboxes = list(form['permissions'])
+
+        grouped = {}
+        for perm, checkbox in zip(perms_qs, checkboxes):
+            label = APP_LABELS_ES.get(perm.content_type.app_label, perm.content_type.app_label.title())
+            grouped.setdefault(label, []).append(checkbox)
+
+        ctx['grouped_permissions'] = grouped
+        return ctx
+
+class GroupDeleteView(AdminOnlyMixin, PermissionOrRedirectMixin, DeleteView):
+    permission_required = 'auth.delete_group'
     model = Group
     template_name = 'security/confirm_delete.html'
     success_url = reverse_lazy('security:group_list')
 
 # === PERMISOS / PERMISSION (solo Administrador) ===
-class PermissionListView(AdminOnlyMixin, ListView):
+class PermissionListView(AdminOnlyMixin, PermissionOrRedirectMixin, ListView):
+    permission_required = 'auth.view_permission'
     model = Permission
     template_name = 'security/permission_list.html'
     context_object_name = 'items'
     queryset = Permission.objects.select_related('content_type')
 
-class PermissionCreateView(AdminOnlyMixin, CreateView):
+class PermissionCreateView(AdminOnlyMixin, PermissionOrRedirectMixin, CreateView):
+    permission_required = 'auth.add_permission'
     model = Permission
     form_class = PermissionForm
     template_name = 'security/permission_form.html'
     success_url = reverse_lazy('security:permission_list')
 
-class PermissionUpdateView(AdminOnlyMixin, UpdateView):
+class PermissionUpdateView(AdminOnlyMixin, PermissionOrRedirectMixin, UpdateView):
+    permission_required = 'auth.change_permission'
     model = Permission
     form_class = PermissionForm
     template_name = 'security/permission_form.html'
     success_url = reverse_lazy('security:permission_list')
 
-class PermissionDeleteView(AdminOnlyMixin, DeleteView):
+class PermissionDeleteView(AdminOnlyMixin, PermissionOrRedirectMixin, DeleteView):
+    permission_required = 'auth.delete_permission'
     model = Permission
     template_name = 'security/confirm_delete.html'
     success_url = reverse_lazy('security:permission_list')

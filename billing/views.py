@@ -4,7 +4,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
@@ -15,7 +15,7 @@ from .models import *
 from purchasing.models import Purchase
 from .forms import BrandForm, InvoiceForm, InvoiceDetailFormSet, ProductForm, CustomerForm
 from decimal import Decimal
-from shared.mixins import StaffRequiredMixin, ExportMixin, GroupRequiredMixin
+from shared.mixins import StaffRequiredMixin, ExportMixin, GroupRequiredMixin, ProtectedDeleteMixin, PermissionOrRedirectMixin
 from shared.decorators import audit_action, group_required
 from django.http import HttpResponse
 from shared.notifications import generate_invoice_pdf, send_invoice_email, send_invoice_whatsapp
@@ -44,8 +44,9 @@ def home(request):
 
 
 @method_decorator(audit_action('LIST_BRANDS'), name='dispatch')
-class BrandListView(LoginRequiredMixin,ExportMixin,GroupRequiredMixin, ListView):
+class BrandListView(LoginRequiredMixin,ExportMixin,GroupRequiredMixin, PermissionOrRedirectMixin, ListView):
     group_required = ['Administrador', 'Analista de Compras']
+    permission_required = 'billing.view_brand'
     model = Brand
     template_name = 'billing/brand_list.html'
     context_object_name = 'items'
@@ -83,6 +84,7 @@ class BrandListView(LoginRequiredMixin,ExportMixin,GroupRequiredMixin, ListView)
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('billing.add_brand', raise_exception=True)
 @audit_action('CREATE_BRAND')
 def brand_create(request):
     if request.method == 'POST':
@@ -98,6 +100,7 @@ def brand_create(request):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('billing.change_brand', raise_exception=True)
 @audit_action('UPDATE_BRAND')
 def brand_update(request, pk):
     brand = get_object_or_404(Brand, pk=pk)
@@ -114,19 +117,24 @@ def brand_update(request, pk):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('billing.delete_brand', raise_exception=True)
 @audit_action('DELETE_BRAND')
 def brand_delete(request, pk):
     brand = get_object_or_404(Brand, pk=pk)
     if request.method == 'POST':
-        brand.delete()
-        messages.success(request, 'Marca Eliminada!')
+        try:
+            brand.delete()
+            messages.success(request, 'Marca eliminada correctamente!')
+        except ProtectedError:
+            messages.error(request, f"No se puede eliminar la marca '{brand}' porque tiene productos asociados.")
         return redirect('billing:brand_list')
     return render(request, 'billing/brand_confirm_delete.html', {'object': brand})
 
 
 @method_decorator(audit_action('LIST_INVOICES'), name='dispatch')
-class InvoiceListView(LoginRequiredMixin, ExportMixin, GroupRequiredMixin, ListView):
+class InvoiceListView(LoginRequiredMixin, ExportMixin, GroupRequiredMixin, PermissionOrRedirectMixin, ListView):
     group_required = ['Administrador', 'Vendedor']
+    permission_required = 'billing.view_invoice'
     model = Invoice
     template_name = 'billing/invoice_list.html'
     context_object_name = 'items'
@@ -172,20 +180,22 @@ class InvoiceListView(LoginRequiredMixin, ExportMixin, GroupRequiredMixin, ListV
         elif is_active == 'false':
             qs = qs.filter(is_active=False)
         return qs
-        def get_context_data(self, **kwargs):
-            ctx = super().get_context_data(**kwargs)
-            ctx['filter'] = self.request.GET
-            filter_keys = ['dni', 'customer_name', 'total_min', 'total_max', 'is_active', 'tipo_pago', 'estado']
-            ctx['has_active_filters'] = any(self.request.GET.get(k) for k in filter_keys)
-            params = self.request.GET.copy()
-            params.pop('page', None)
-            ctx['query_string'] = params.urlencode()
-            return ctx
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['filter'] = self.request.GET
+        filter_keys = ['dni', 'customer_name', 'total_min', 'total_max', 'is_active', 'tipo_pago', 'estado']
+        ctx['has_active_filters'] = any(self.request.GET.get(k) for k in filter_keys)
+        params = self.request.GET.copy()
+        params.pop('page', None)
+        ctx['query_string'] = params.urlencode()
+        return ctx
 
 
 @method_decorator(audit_action('CREATE_INVOICE'), name='dispatch')
-class InvoiceCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
+class InvoiceCreateView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedirectMixin, CreateView):
     group_required = ['Administrador', 'Vendedor']
+    permission_required = 'billing.add_invoice'
     model = Invoice
     form_class = InvoiceForm
     template_name = 'billing/invoice_form.html'
@@ -278,8 +288,9 @@ class InvoiceCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
         messages.success(self.request, f'Factura #{self.object.id} creada correctamente! Total: ${self.object.total}')
         return redirect('billing:invoice_detail_voucher', pk=self.object.pk)
 @method_decorator(audit_action('UPDATE_INVOICE'), name='dispatch')
-class InvoiceUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
+class InvoiceUpdateView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedirectMixin, UpdateView):
     group_required = ['Administrador', 'Vendedor']
+    permission_required = 'billing.change_invoice'
     model = Invoice
     form_class = InvoiceForm
     template_name = 'billing/invoice_form.html'
@@ -370,8 +381,9 @@ class InvoiceUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
 
 
 @method_decorator(audit_action('DETAIL_INVOICE'), name='dispatch')
-class InvoiceDetailView(LoginRequiredMixin, GroupRequiredMixin, DetailView):
+class InvoiceDetailView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedirectMixin, DetailView):
     group_required = ['Administrador', 'Vendedor']
+    permission_required = 'billing.view_invoice'
     model = Invoice
     template_name = 'billing/invoice_detail.html'
     context_object_name = 'invoice'
@@ -385,31 +397,22 @@ class InvoiceDetailView(LoginRequiredMixin, GroupRequiredMixin, DetailView):
         return ctx
 
 @method_decorator(audit_action('DELETE_INVOICE'), name='dispatch')
-class InvoiceDeleteView(LoginRequiredMixin, GroupRequiredMixin, StaffRequiredMixin, DeleteView):
+class InvoiceDeleteView(ProtectedDeleteMixin, LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedirectMixin, StaffRequiredMixin, DeleteView):
     group_required = ['Administrador', 'Vendedor']
+    permission_required = 'billing.delete_invoice'
+    protected_error_message = (
+        "No se puede eliminar la '{object}' porque tiene cobros registrados. "
+        "Elimine primero los cobros desde el historial, o considere anular la factura en su lugar."
+    )
     model = Invoice
     template_name = 'billing/invoice_confirm_delete.html'
     success_url = reverse_lazy('billing:invoice_list')
     staff_redirect_url = '/invoices/'
 
-    def form_valid(self, form):
-        self.object = self.get_object()
-        invoice_id = self.object.id
-        success_url = self.get_success_url()
-        try:
-            self.object.delete()
-            messages.success(self.request, f'Factura #{invoice_id} eliminada correctamente!')
-        except ProtectedError:
-            messages.error(
-                self.request,
-                f'No se puede eliminar la Factura #{invoice_id} porque tiene cobros registrados. '
-                f'Elimine primero los cobros desde el historial, o considere anular la factura en su lugar.'
-            )
-        return redirect(success_url)
-
 
 # === PRODUCTGROUP (CBV) ===
-class ProductGroupListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, ListView):
+class ProductGroupListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, PermissionOrRedirectMixin, ListView):
+    permission_required = 'billing.view_productgroup'
     group_required = ['Administrador', 'Analista de Compras']
     model = ProductGroup
     template_name = 'billing/productgroup_list.html'
@@ -444,19 +447,24 @@ class ProductGroupListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, L
         ctx['query_string'] = params.urlencode()
         return ctx
 
-class ProductGroupCreateView(LoginRequiredMixin,GroupRequiredMixin, CreateView):
+class ProductGroupCreateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, CreateView):
+    permission_required = 'billing.add_productgroup'
     group_required = ['Administrador', 'Analista de Compras']
     model = ProductGroup; fields = ['name','is_active']; template_name = 'billing/productgroup_form.html'; success_url = reverse_lazy('billing:productgroup_list')
-class ProductGroupUpdateView(LoginRequiredMixin,GroupRequiredMixin, UpdateView):
+class ProductGroupUpdateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, UpdateView):
+    permission_required = 'billing.change_productgroup'
     group_required = ['Administrador', 'Analista de Compras']
     model = ProductGroup; fields = ['name','is_active']; template_name = 'billing/productgroup_form.html'; success_url = reverse_lazy('billing:productgroup_list')
-class ProductDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, DeleteView):
+class ProductDeleteView(ProtectedDeleteMixin, LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, PermissionOrRedirectMixin, DeleteView):
+    protected_error_message = "No se puede eliminar el producto '{object}' porque está incluido en facturas o compras existentes."
+    permission_required = 'billing.delete_product'
     group_required = ['Administrador', 'Analista de Compras']
     model = Product; template_name = 'billing/product_confirm_delete.html'; success_url = reverse_lazy('billing:product_list'); staff_redirect_url = '/products/'
 
 
 # === SUPPLIER (CBV) ===
-class SupplierListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, ListView):
+class SupplierListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, PermissionOrRedirectMixin, ListView):
+    permission_required = 'billing.view_supplier'
     group_required = ['Administrador', 'Analista de Compras']
     model = Supplier
     template_name = 'billing/supplier_list.html'
@@ -497,19 +505,24 @@ class SupplierListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, ListV
         ctx['query_string'] = params.urlencode()
         return ctx
 
-class SupplierCreateView(LoginRequiredMixin,GroupRequiredMixin, CreateView):
+class SupplierCreateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, CreateView):
+    permission_required = 'billing.add_supplier'
     group_required = ['Administrador', 'Analista de Compras']
     model = Supplier; fields = ['name','contact_name','email','phone','address','is_active']; template_name = 'billing/supplier_form.html'; success_url = reverse_lazy('billing:supplier_list')
-class SupplierUpdateView(LoginRequiredMixin,GroupRequiredMixin, UpdateView):
+class SupplierUpdateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, UpdateView):
+    permission_required = 'billing.change_supplier'
     group_required = ['Administrador', 'Analista de Compras']
     model = Supplier; fields = ['name','contact_name','email','phone','address','is_active']; template_name = 'billing/supplier_form.html'; success_url = reverse_lazy('billing:supplier_list')
-class SupplierDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, DeleteView):
+class SupplierDeleteView(ProtectedDeleteMixin, LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, PermissionOrRedirectMixin, DeleteView):
+    protected_error_message = "No se puede eliminar el proveedor '{object}' porque tiene compras asociadas. Elimine primero esas compras, o considere desactivarlo en su lugar."
+    permission_required = 'billing.delete_supplier'
     group_required = ['Administrador', 'Analista de Compras']
     model = Supplier; template_name = 'billing/supplier_confirm_delete.html'; success_url = reverse_lazy('billing:supplier_list'); staff_redirect_url = '/suppliers/'
 
 
 # === PRODUCT (CBV con búsqueda y pagineo) ===
-class ProductListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, ListView):
+class ProductListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, PermissionOrRedirectMixin, ListView):
+    permission_required = 'billing.view_product'
     group_required = ['Administrador', 'Analista de Compras']
     export_filename = 'productos'
     export_fields = [
@@ -657,30 +670,36 @@ class ProductListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, ListVi
         return ctx
 
 
-class ProductCreateView(LoginRequiredMixin,GroupRequiredMixin, CreateView):
+class ProductCreateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, CreateView):
+    permission_required = 'billing.add_product'
     group_required = ['Administrador', 'Analista de Compras']
     model = Product
     form_class = ProductForm
     template_name = 'billing/product_form.html'
     success_url = reverse_lazy('billing:product_list')
 
-class ProductUpdateView(LoginRequiredMixin,GroupRequiredMixin, UpdateView):
+class ProductUpdateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, UpdateView):
+    permission_required = 'billing.change_product'
     group_required = ['Administrador', 'Analista de Compras']
     model = Product
     form_class = ProductForm
     template_name = 'billing/product_form.html'
     success_url = reverse_lazy('billing:product_list')
-class ProductDetailView(LoginRequiredMixin,GroupRequiredMixin, DetailView):
+class ProductDetailView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, DetailView):
+    permission_required = 'billing.view_product'
     group_required = ['Administrador', 'Analista de Compras']
     model = Product
     template_name = 'billing/product_detail.html'
     context_object_name = 'product'
-class ProductGroupDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, DeleteView):
+class ProductGroupDeleteView(ProtectedDeleteMixin, LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, PermissionOrRedirectMixin, DeleteView):
+    protected_error_message = "No se puede eliminar el grupo '{object}' porque tiene productos asociados. Reasigne o elimine esos productos primero."
+    permission_required = 'billing.delete_productgroup'
     group_required = ['Administrador', 'Analista de Compras']
     model = ProductGroup; template_name = 'billing/productgroup_confirm_delete.html'; success_url = reverse_lazy('billing:productgroup_list'); staff_redirect_url = '/groups/'
 
 # === CUSTOMER (CBV) ===
-class CustomerListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, ListView):
+class CustomerListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, PermissionOrRedirectMixin, ListView):
+    permission_required = 'billing.view_customer'
     group_required = ['Administrador', 'Vendedor']
     model = Customer
     template_name = 'billing/customer_list.html'
@@ -721,21 +740,24 @@ class CustomerListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, ListV
         ctx['query_string'] = params.urlencode()
         return ctx
 
-class CustomerCreateView(LoginRequiredMixin,GroupRequiredMixin, CreateView):
+class CustomerCreateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, CreateView):
+    permission_required = 'billing.add_customer'
     group_required = ['Administrador', 'Vendedor']
     model = Customer
     form_class = CustomerForm
     template_name = 'billing/customer_form.html'
     success_url = reverse_lazy('billing:customer_list')
 
-class CustomerUpdateView(LoginRequiredMixin,GroupRequiredMixin, UpdateView):
+class CustomerUpdateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, UpdateView):
+    permission_required = 'billing.change_customer'
     group_required = ['Administrador', 'Vendedor']
     model = Customer
     form_class = CustomerForm
     template_name = 'billing/customer_form.html'
     success_url = reverse_lazy('billing:customer_list')
 
-class CustomerDetailView(LoginRequiredMixin,GroupRequiredMixin, DetailView):
+class CustomerDetailView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, DetailView):
+    permission_required = 'billing.view_customer'
     group_required = ['Administrador', 'Vendedor']
     model = Customer
     template_name = 'billing/customer_detail.html'
@@ -747,7 +769,9 @@ class CustomerDetailView(LoginRequiredMixin,GroupRequiredMixin, DetailView):
         ctx['invoices'] = self.object.Facturas.select_related('customer').order_by('-invoice_date')[:10]
         return ctx
 
-class CustomerDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, DeleteView):
+class CustomerDeleteView(ProtectedDeleteMixin, LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, PermissionOrRedirectMixin, DeleteView):
+    protected_error_message = "No se puede eliminar al cliente '{object}' porque tiene facturas asociadas."
+    permission_required = 'billing.delete_customer'
     group_required = ['Administrador', 'Vendedor']
     model = Customer
     template_name = 'billing/customer_confirm_delete.html'
@@ -757,6 +781,7 @@ class CustomerDeleteView(LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMix
 
 
 @login_required
+@permission_required('billing.view_invoice', raise_exception=True)
 @xframe_options_sameorigin
 def invoice_comprobante_pdf(request, pk):
     """Sirve el PDF del comprobante para mostrarlo embebido (inline, no como descarga)."""

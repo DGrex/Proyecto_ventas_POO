@@ -2,7 +2,7 @@ import json
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -33,6 +33,7 @@ class PurchaseExportHelper(ExportMixin):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('purchasing.view_purchase', raise_exception=True)
 @audit_action('LIST_PURCHASES')
 def purchase_list(request):
     """Lista todas las compras realizadas a proveedores con filtros."""
@@ -116,6 +117,7 @@ def purchase_list(request):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('purchasing.add_purchase', raise_exception=True)
 @audit_action('CREATE_PURCHASE')
 def purchase_create(request):
     """Crea una nueva compra y actualiza el stock."""
@@ -180,6 +182,7 @@ def purchase_create(request):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('purchasing.change_purchase', raise_exception=True)
 @audit_action('UPDATE_PURCHASE')
 def purchase_update(request, pk):
     """Modifica una compra existente y ajusta el stock."""
@@ -260,6 +263,7 @@ def purchase_update(request, pk):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('purchasing.view_purchase', raise_exception=True)
 @audit_action('DETAIL_PURCHASE')
 def purchase_detail(request, pk):
     """Muestra el detalle completo de una compra."""
@@ -272,6 +276,7 @@ def purchase_detail(request, pk):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('purchasing.delete_purchase', raise_exception=True)
 @audit_action('DELETE_PURCHASE')
 def purchase_delete(request, pk):
     """Elimina una compra y todos sus detalles (CASCADE), devolviendo el stock."""

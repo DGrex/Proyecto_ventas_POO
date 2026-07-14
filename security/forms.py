@@ -67,12 +67,13 @@ class UserUpdateForm(forms.ModelForm):
 
 # === 3. ROLES (Group) CON SUS PERMISOS ===
 class GroupForm(forms.ModelForm):
-    """Crear/editar un rol y marcar sus permisos con checkboxes."""
     permissions = forms.ModelMultipleChoiceField(
-        queryset=Permission.objects.select_related('content_type'),
+        queryset=Permission.objects.select_related('content_type').exclude(
+            content_type__app_label__in=['admin', 'contenttypes', 'sessions']
+        ).order_by('content_type__app_label', 'content_type__model', 'codename'),
         required=False,
         widget=forms.CheckboxSelectMultiple,
-        label='Permissions',
+        label='Permisos',
     )
 
     class Meta:
@@ -81,7 +82,6 @@ class GroupForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
-
 # === 4. PERMISOS PERSONALIZADOS ===
 class PermissionForm(forms.ModelForm):
     """Crear un permiso propio, ej: can_approve_invoice."""

@@ -100,10 +100,12 @@
           {% endif %}
         </td>
         <td class="text-center text-nowrap">
+          {% if perms.pagos.view_pagocompra %}
           <a href="{% url 'pagos:pago_list' compra.id %}" class="btn-view" title="Ver Historial">
             <i class="fas fa-history me-1"></i>Historial
           </a>
-          {% if compra.estado == 'PENDIENTE' %}
+          {% endif %}
+          {% if compra.estado == 'PENDIENTE' and perms.pagos.add_pagocompra %}
             <a href="{% url 'pagos:pago_create' compra.id %}" class="btn-pay" title="Registrar Pago">
               <i class="fas fa-dollar-sign me-1"></i>Pagar
             </a>

@@ -10,6 +10,7 @@ from reportlab.lib import colors
 
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.db.models import ProtectedError
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.html import escape
@@ -292,3 +293,59 @@ class GroupRequiredMixin:
         # 4. No tiene el rol -> mensaje de error y redirección
         messages.error(request, self.group_error_message)
         return redirect(self.group_redirect_url)
+
+class ProtectedDeleteMixin:
+    """
+    Mixin para DeleteView que atrapa ProtectedError (relaciones con
+    on_delete=models.PROTECT) y muestra un mensaje amigable en vez de la
+    página de error 500 cruda de Django.
+
+    Nota técnica: en Django 4+/6, DeleteView llama a form_valid() en el POST,
+    no a delete() -> por eso este mixin sobreescribe form_valid().
+    """
+    protected_error_message = "No se puede eliminar '{object}' porque está siendo utilizado en otros registros del sistema."
+
+    def form_valid(self, form):
+        self.object = self.get_object()
+        object_repr = str(self.object)
+        success_url = self.get_success_url()
+        try:
+            self.object.delete()
+            messages.success(self.request, f"'{object_repr}' eliminado correctamente!")
+        except ProtectedError:
+            messages.error(self.request, self.protected_error_message.format(object=object_repr))
+        return redirect(success_url)
+
+
+class PermissionOrRedirectMixin:
+    """
+    Verificación de permisos finos (Django auth.Permission) para CBVs.
+    A diferencia de PermissionRequiredMixin (que muestra un 403 crudo),
+    este redirige con un mensaje de error, igual que GroupRequiredMixin,
+    para mantener consistencia de UX en todo el sistema.
+
+    Uso:
+        class InvoiceDeleteView(PermissionOrRedirectMixin, LoginRequiredMixin, GroupRequiredMixin, DeleteView):
+            permission_required = 'billing.delete_invoice'   # str o tupla de strings
+    """
+    permission_required = None
+    permission_redirect_url = '/'
+    permission_error_message = 'No tiene permiso para realizar esta acción.'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        if request.user.is_superuser:
+            return super().dispatch(request, *args, **kwargs)
+
+        perms = self.permission_required
+        if perms is None:
+            return super().dispatch(request, *args, **kwargs)
+        if isinstance(perms, str):
+            perms = (perms,)
+
+        if request.user.has_perms(perms):
+            return super().dispatch(request, *args, **kwargs)
+
+        messages.error(request, self.permission_error_message)
+        return redirect(self.permission_redirect_url)

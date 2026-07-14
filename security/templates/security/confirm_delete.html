@@ -1,16 +1,35 @@
 {% extends 'billing/base.html' %}
-{% block title %}Confirm Delete{% endblock %}
+{% block title %}Confirmar Eliminación{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="alert alert-danger">
-      <h4>Are you sure?</h4>
-      <p>You are about to delete: <strong>{{ object }}</strong></p>
-      <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Yes, delete</button>
-        <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
-      </form>
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card delete-card">
+        <div class="card-body p-4 text-center">
+          <div class="delete-icon-circle mx-auto mb-3">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <h4 class="fw-bold mb-2">¿Está seguro?</h4>
+          <p class="text-muted">
+            Está a punto de eliminar: <strong>{{ object }}</strong>
+          </p>
+          <div class="alert-info-detail text-start">
+            <ul class="mb-0 small">
+              <li>La eliminación es irreversible.</li>
+              <li>Si este registro está siendo utilizado en otros datos del sistema, no podrá ser eliminado.</li>
+            </ul>
+          </div>
+          <form method="post" class="mt-4 d-flex justify-content-center gap-2">
+            {% csrf_token %}
+            <a href="javascript:history.back()" class="btn-cancel-delete">
+              Cancelar
+            </a>
+            <button type="submit" class="btn-confirm-delete">
+              <i class="bi bi-trash-fill me-1"></i>Sí, Eliminar
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -31,7 +31,7 @@
       <h1><i class="fas fa-history me-2"></i>Historial de Pagos</h1>
       <p class="mb-0" style="opacity:.85;font-size:.88rem;">Factura #{{ factura.id }} - {{ factura.customer }}</p>
     </div>
-    {% if factura.estado == 'PENDIENTE' %}
+    {% if factura.estado == 'PENDIENTE' and perms.cobros.add_cobrofactura %}
       <a href="{% url 'cobros:cobro_create' factura.id %}" class="btn-pay">
         <i class="fas fa-dollar-sign me-1"></i>Registrar Nuevo Pago
       </a>
@@ -82,12 +82,16 @@
                     onclick="verComprobante('{% url 'cobros:cobro_comprobante' cobro.pk %}')">
               <i class="fas fa-receipt me-1"></i>Comprobante
             </button>
+            {% if perms.cobros.change_cobrofactura %}
             <a href="{% url 'cobros:cobro_update' cobro.pk %}" class="btn-edit">
               <i class="fas fa-pencil-alt me-1"></i>Editar
             </a>
+            {% endif %}
+            {% if perms.cobros.delete_cobrofactura %}
             <a href="{% url 'cobros:cobro_delete' cobro.pk %}" class="btn-del">
               <i class="fas fa-trash-alt me-1"></i>Eliminar
             </a>
+            {% endif %}
           </td>
         </tr>
         {% empty %}

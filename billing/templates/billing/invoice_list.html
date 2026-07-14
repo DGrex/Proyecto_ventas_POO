@@ -44,9 +44,11 @@
       <h1><i class="fas fa-list me-2"></i>Facturas</h1>
       <p>Gestión de facturas</p>
     </div>
+    {% if perms.billing.add_invoice %}
     <a href="{% url 'billing:invoice_create' %}" class="btn btn-light fw-bold rounded-pill px-4 shadow-sm text-primary">
       <i class="fas fa-plus me-1"></i> Nueva Factura
     </a>
+    {% endif %}
   </div>
 </div>
 
@@ -250,16 +252,24 @@
           </td>
         {% endif %}
         <td class="text-center text-nowrap">
+          {% if perms.billing.view_invoice %}
           <a href="{% url 'billing:invoice_detail' inv.pk %}" class="btn-view" title="Ver Detalle">
             <i class="fas fa-eye me-1"></i>Ver
           </a>
+          {% endif %}
+          {% if perms.billing.change_invoice %}
           <a href="{% url 'billing:invoice_update' inv.pk %}" class="btn-edit"><i class="fas fa-pencil-alt me-1"></i>Editar</a>
+          {% endif %}
+          {% if perms.billing.delete_invoice %}
           <a href="{% url 'billing:invoice_delete' inv.pk %}" class="btn-del"><i class="fas fa-trash-alt me-1"></i>Borrar</a>
+          {% endif %}
           {% if inv.tipo_pago == 'credito' %}
+            {% if perms.cobros.view_cobrofactura %}
             <a href="{% url 'cobros:cobro_list' inv.pk %}" class="btn-edit" title="Ver Historial de Cobros">
               <i class="fas fa-history me-1"></i>Historial
             </a>
-            {% if inv.estado == 'PENDIENTE' %}
+            {% endif %}
+            {% if inv.estado == 'PENDIENTE' and perms.cobros.add_cobrofactura %}
               <a href="{% url 'cobros:cobro_create' inv.pk %}" class="btn-edit" title="Registrar pago">
                 <i class="fas fa-dollar-sign me-1"></i>Cobrar
               </a>

@@ -94,9 +94,11 @@
       <h1><i class="fas fa-list me-2"></i>Clientes</h1>
       <p>Gestión de clientes</p>
     </div>
+    {% if perms.billing.add_customer %}
     <a href="{% url 'billing:customer_create' %}" class="btn btn-light fw-bold rounded-pill px-4 shadow-sm text-primary">
       <i class="fas fa-plus me-1"></i> Nueva Cliente
     </a>
+    {% endif %}
   </div>
 </div>
 
@@ -241,11 +243,17 @@
           {% endif %}
         </td>{% endif %}
         <td class="text-center text-nowrap">
+          {% if perms.billing.view_customer %}
           <a href="{% url 'billing:customer_detail' item.pk %}" class="btn-view" title="Ver Detalle">
             <i class="fas fa-eye me-1"></i>Ver
           </a>
+          {% endif %}
+          {% if perms.billing.change_customer %}
           <a href="{% url 'billing:customer_update' item.pk %}" class="btn-edit"><i class="fas fa-pencil-alt me-1"></i>Editar</a>
+          {% endif %}
+          {% if perms.billing.delete_customer %}
           <a href="{% url 'billing:customer_delete' item.pk %}" class="btn-del"><i class="fas fa-trash-alt me-1"></i>Borrar</a>
+          {% endif %}
         </td>
       </tr>
       {% empty %}

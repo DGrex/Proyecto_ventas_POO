@@ -1,15 +1,68 @@
 {% extends 'billing/base.html' %}
-{% block title %}Permission{% endblock %}
+{% block title %}{{ object|default_if_none:"Nuevo Permiso" }}{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-md-6">
-    <h2>Permission</h2>
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-primary">Save</button>
-      <a href="{% url 'security:permission_list' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+  <div class="col-xl-7 col-lg-8">
+    <div class="premium-card">
+
+      <div class="premium-card-header d-flex justify-content-between align-items-center text-white">
+        <div>
+          <h4 class="mb-1 fw-bold text-white"><i class="bi bi-key-fill me-2"></i>{% if object %}Editar Permiso{% else %}Nuevo Permiso{% endif %}</h4>
+          <p class="text-white-50 mb-0 small">Crea un permiso personalizado para un modelo del sistema.</p>
+        </div>
+        <a href="{% url 'security:permission_list' %}" class="btn btn-outline-light btn-sm px-3 rounded-pill">
+          <i class="bi bi-arrow-left"></i> Volver al listado
+        </a>
+      </div>
+
+      <div class="premium-card-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger rounded-3 mb-4" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label form-label-premium" for="{{ form.name.id_for_label }}">
+                {{ form.name.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.name }}
+              <div class="form-text text-muted small">Nombre legible, ej: "Puede aprobar facturas"</div>
+              {% for error in form.name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-premium" for="{{ form.codename.id_for_label }}">
+                {{ form.codename.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.codename }}
+              <div class="form-text text-muted small">Identificador técnico, ej: "approve_invoice"</div>
+              {% for error in form.codename.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label form-label-premium" for="{{ form.content_type.id_for_label }}">
+                {{ form.content_type.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.content_type }}
+              <div class="form-text text-muted small">Modelo del sistema al que aplica este permiso.</div>
+              {% for error in form.content_type.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 border-top pt-4 mt-4">
+            <button type="submit" class="btn btn-premium-save">
+              <i class="bi bi-save me-1"></i> Guardar Permiso
+            </button>
+            <a href="{% url 'security:permission_list' %}" class="btn btn-premium-cancel btn-outline-secondary">Cancelar</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

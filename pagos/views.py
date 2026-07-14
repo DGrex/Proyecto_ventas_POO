@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -14,6 +14,7 @@ from .forms import PagoCompraForm
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('purchasing.view_purchase', raise_exception=True)
 @audit_action('LIST_COMPRAS_PENDIENTES')
 def compra_pendiente_list(request):
     """Lista las compras a crédito. Por defecto muestra solo PENDIENTE, con filtro de estado."""
@@ -40,6 +41,7 @@ def compra_pendiente_list(request):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('pagos.add_pagocompra', raise_exception=True)
 @audit_action('CREATE_PAGO')
 def pago_create(request, compra_id):
     """Registra un abono sobre una compra a crédito."""
@@ -78,6 +80,7 @@ def pago_create(request, compra_id):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('pagos.view_pagocompra', raise_exception=True)
 @audit_action('LIST_PAGOS')
 def pago_list(request, compra_id):
     """Historial de pagos de una compra."""
@@ -97,6 +100,7 @@ def pago_list(request, compra_id):
 
 @login_required
 @group_required('Administrador', 'Analista de Compras')
+@permission_required('pagos.change_pagocompra', raise_exception=True)
 @audit_action('UPDATE_PAGO')
 def pago_update(request, pk):
     """Edita un abono existente."""
@@ -121,6 +125,7 @@ def pago_update(request, pk):
 
 @login_required
 @group_required('Administrador')
+@permission_required('pagos.delete_pagocompra', raise_exception=True)
 @audit_action('DELETE_PAGO')
 def pago_delete(request, pk):
     """Elimina un abono (solo si la compra no está ya cancelada)."""
@@ -144,6 +149,7 @@ def pago_delete(request, pk):
     return render(request, 'pagos/pago_confirm_delete.html', {'object': pago})
 
 @login_required
+@permission_required('pagos.view_pagocompra', raise_exception=True)
 @xframe_options_sameorigin
 def pago_comprobante_pdf(request, pk):
     """Sirve el comprobante/aviso de pago a proveedor en PDF, embebido (inline) para el modal."""

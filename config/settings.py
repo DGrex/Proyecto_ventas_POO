@@ -146,3 +146,11 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 # ── Configuración de WhatsApp (CallMeBot) ─────────────────────────
 #CALLMEBOT_API_KEY = os.environ.get('CALLMEBOT_API_KEY', '')
 
+# ── Configuración de PayPal ────────────────────────────────────────
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
+PAYPAL_CLIENT_SECRET = os.environ.get('PAYPAL_CLIENT_SECRET', '')
+PAYPAL_MODE = os.environ.get('PAYPAL_MODE', 'sandbox')
+PAYPAL_API_BASE = (
+    'https://api-m.sandbox.paypal.com' if PAYPAL_MODE == 'sandbox'
+    else 'https://api-m.paypal.com'
+)

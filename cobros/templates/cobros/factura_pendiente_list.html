@@ -98,10 +98,12 @@
           {% endif %}
         </td>
         <td class="text-center text-nowrap">
+          {% if perms.cobros.view_cobrofactura %}
           <a href="{% url 'cobros:cobro_list' factura.id %}" class="btn-view" title="Ver Historial">
             <i class="fas fa-history me-1"></i>Historial
           </a>
-          {% if factura.estado == 'PENDIENTE' %}
+          {% endif %}
+          {% if factura.estado == 'PENDIENTE' and perms.cobros.add_cobrofactura %}
             <a href="{% url 'cobros:cobro_create' factura.id %}" class="btn-pay" title="Registrar Pago">
               <i class="fas fa-dollar-sign me-1"></i>Pagar
             </a>

@@ -97,17 +97,21 @@
         <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#voucherModal">
           <i class="bi bi-receipt"></i> Ver Comprobante
         </button>
-        {% if invoice.tipo_pago == 'credito' %}
+        {% if invoice.tipo_pago == 'credito' and perms.cobros.view_cobrofactura %}
           <a href="{% url 'cobros:cobro_list' invoice.pk %}" class="btn btn-dark">
             <i class="bi bi-clock-history"></i> Historial de Cobros
           </a>
         {% endif %}
+        {% if perms.billing.change_invoice %}
         <a href="{% url 'billing:invoice_update' invoice.pk %}" class="btn btn-warning">
           <i class="bi bi-pencil-square"></i> Editar Factura
         </a>
+        {% endif %}
+        {% if perms.billing.delete_invoice %}
         <a href="{% url 'billing:invoice_delete' invoice.pk %}" class="btn btn-danger">
           <i class="bi bi-trash-fill"></i> Eliminar
         </a>
+        {% endif %}
       </div>
 
     </div>

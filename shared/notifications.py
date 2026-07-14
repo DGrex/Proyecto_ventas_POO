@@ -229,11 +229,12 @@ def generate_cobro_receipt_pdf(cobro):
     elements.append(info_table)
     elements.append(Spacer(1, 18))
 
+# en generate_cobro_receipt_pdf
     resumen_data = [
-        ['Total de la Factura:', f'${factura.total}'],
-        ['Valor Abonado (este pago):', f'${cobro.valor}'],
-        ['Total Abonado Acumulado:', f'${total_abonado}'],
-        ['Saldo Pendiente:', f'${factura.saldo}'],
+        ['Total de la Factura:', f'${factura.total:.2f}'],
+        ['Valor Abonado (este pago):', f'${cobro.valor:.2f}'],
+        ['Total Abonado Acumulado:', f'${total_abonado:.2f}'],
+        ['Saldo Pendiente:', f'${factura.saldo:.2f}'],
     ]
     resumen_table = Table(resumen_data, colWidths=[340, 120])
     resumen_table.setStyle(TableStyle([
@@ -376,11 +377,12 @@ def generate_pago_receipt_pdf(pago):
     elements.append(info_table)
     elements.append(Spacer(1, 18))
 
+# en generate_pago_receipt_pdf
     resumen_data = [
-        ['Total de la Compra:', f'${compra.total}'],
-        ['Valor Pagado (este pago):', f'${pago.valor}'],
-        ['Total Pagado Acumulado:', f'${total_pagado}'],
-        ['Saldo Pendiente con el Proveedor:', f'${compra.saldo}'],
+        ['Total de la Compra:', f'${compra.total:.2f}'],
+        ['Valor Pagado (este pago):', f'${pago.valor:.2f}'],
+        ['Total Pagado Acumulado:', f'${total_pagado:.2f}'],
+        ['Saldo Pendiente con el Proveedor:', f'${compra.saldo:.2f}'],
     ]
     resumen_table = Table(resumen_data, colWidths=[340, 120])
     resumen_table.setStyle(TableStyle([

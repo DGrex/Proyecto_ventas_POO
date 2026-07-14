@@ -94,9 +94,11 @@
       <h1><i class="bi bi-bag-check me-2"></i>Compras</h1>
       <p>Historial de compras a proveedores</p>
     </div>
+    {% if perms.purchasing.add_purchase %}
     <a href="{% url 'purchasing:purchase_create' %}" class="btn btn-light fw-bold rounded-pill px-4 shadow-sm text-primary">
       <i class="bi bi-plus-lg me-1"></i> Registrar Compra
     </a>
+    {% endif %}
   </div>
 
   <div class="row g-3 mb-4">
@@ -281,12 +283,18 @@
           </td>
         {% endif %}
         <td class="text-center text-nowrap">
+          {% if perms.purchasing.view_purchase %}
           <a href="{% url 'purchasing:purchase_detail' item.pk %}" class="btn-view" title="Ver Detalle">
             <i class="bi bi-eye-fill me-1"></i>Ver
           </a>
+          {% endif %}
+          {% if perms.purchasing.change_purchase %}
           <a href="{% url 'purchasing:purchase_update' item.pk %}" class="btn-edit"><i class="bi bi-pencil-fill me-1"></i>Editar</a>
+          {% endif %}
+          {% if perms.purchasing.delete_purchase %}
           <a href="{% url 'purchasing:purchase_delete' item.pk %}" class="btn-del"><i class="bi bi-trash-fill me-1"></i>Borrar</a>
-          {% if item.tipo_pago == 'credito' %}
+          {% endif %}
+          {% if item.tipo_pago == 'credito' and perms.pagos.view_pagocompra %}
             <a href="{% url 'pagos:pago_list' item.pk %}" class="btn-view" title="Ver Historial de Pagos">
               <i class="bi bi-clock-history me-1"></i>Historial
             </a>

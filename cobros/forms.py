@@ -6,15 +6,15 @@ from .models import CobroFactura
 class CobroFacturaForm(forms.ModelForm):
     class Meta:
         model = CobroFactura
-        # 'fecha' NO es editable por el usuario: la asigna el sistema
-        # automáticamente (ver __init__) y nunca se muestra como input.
-        fields = ['valor', 'observacion']
+        fields = ['valor', 'metodo_pago', 'observacion']
         labels = {
             'valor': 'Valor a Abonar ($)',
+            'metodo_pago': 'Método de Pago',
             'observacion': 'Observación',
         }
         widgets = {
             'valor': forms.NumberInput(attrs={'class': 'form-control form-control-premium', 'step': '0.01', 'min': '0.01'}),
+            'metodo_pago': forms.Select(attrs={'class': 'form-select form-select-premium'}),
             'observacion': forms.Textarea(attrs={'class': 'form-control form-control-premium', 'rows': 2}),
         }
 
@@ -28,6 +28,13 @@ class CobroFacturaForm(forms.ModelForm):
         # es editable desde el formulario.
         if not self.instance.pk:
             self.instance.fecha = timezone.localdate()
+        # "PayPal" no debe elegirse a mano en el registro manual: solo se
+        # asigna automáticamente cuando el pago viene de la captura real
+        # de PayPal. Si el cobro YA es de PayPal (edición), se respeta.
+        if self.instance.metodo_pago != 'paypal':
+            self.fields['metodo_pago'].choices = [
+                c for c in CobroFactura.METODO_PAGO if c[0] != 'paypal'
+            ]
 
     def clean_valor(self):
         valor = self.cleaned_data.get('valor')
