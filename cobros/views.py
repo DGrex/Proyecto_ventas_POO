@@ -196,69 +196,80 @@ class CobroDeleteView(LoginRequiredMixin, GroupRequiredMixin, StaffRequiredMixin
         return reverse('cobros:cobro_list', kwargs={'factura_id': self.object.factura_id})
 
 
-
-
 @login_required
 @group_required('Administrador', 'Vendedor')
 @permission_required('cobros.add_cobrofactura', raise_exception=True)
-@require_POST
-def paypal_crear_orden(request, factura_id):
-    """Crea una orden de PayPal por el monto que el vendedor indique (validado contra el saldo)."""
+def paypal_iniciar_pago(request, factura_id):
+    """Crea la orden en PayPal y redirige al navegador directamente a la página de aprobación (sin popup)."""
     factura = get_object_or_404(Invoice, pk=factura_id)
 
     if factura.estado == 'ANULADA':
-        return JsonResponse({'error': 'No se puede pagar una factura anulada.'}, status=400)
+        messages.error(request, 'No se puede pagar una factura anulada.')
+        return redirect('cobros:cobro_create', factura_id=factura.id)
+
+    monto = request.POST.get('monto') or factura.saldo
+    try:
+        monto = Decimal(str(monto))
+    except InvalidOperation:
+        messages.error(request, 'Monto inválido.')
+        return redirect('cobros:cobro_create', factura_id=factura.id)
+
+    if monto <= 0 or monto > factura.saldo:
+        messages.error(request, f'El monto debe ser mayor a 0 y no exceder el saldo (${factura.saldo}).')
+        return redirect('cobros:cobro_create', factura_id=factura.id)
+
+    return_url = request.build_absolute_uri(
+        reverse('cobros:paypal_retorno', kwargs={'factura_id': factura.id})
+    )
+    cancel_url = request.build_absolute_uri(
+        reverse('cobros:cobro_create', kwargs={'factura_id': factura.id})
+    )
 
     try:
-        body = json.loads(request.body)
-        monto = Decimal(str(body.get('monto', '0')))
-    except (json.JSONDecodeError, InvalidOperation):
-        return JsonResponse({'error': 'Monto inválido.'}, status=400)
-
-    if monto <= 0:
-        return JsonResponse({'error': 'El monto debe ser mayor que cero.'}, status=400)
-    if monto > factura.saldo:
-        return JsonResponse({'error': f'El monto excede el saldo pendiente (${factura.saldo}).'}, status=400)
-
-    try:
-        orden = create_order(monto, currency='USD', reference_id=f'factura-{factura.id}')
-        return JsonResponse({'id': orden['id']})
+        orden = create_order(monto, currency='USD', reference_id=f'factura-{factura.id}',
+                              return_url=return_url, cancel_url=cancel_url)
     except Exception as e:
-        return JsonResponse({'error': f'Error al crear la orden en PayPal: {e}'}, status=502)
+        messages.error(request, f'Error al conectar con PayPal: {e}')
+        return redirect('cobros:cobro_create', factura_id=factura.id)
+
+    # Buscamos el link de aprobación que PayPal nos devuelve y navegamos ahí directamente
+    approve_link = next((l['href'] for l in orden['links'] if l['rel'] == 'approve'), None)
+    if not approve_link:
+        messages.error(request, 'PayPal no devolvió un link de aprobación válido.')
+        return redirect('cobros:cobro_create', factura_id=factura.id)
+
+    return redirect(approve_link)
 
 
 @login_required
 @group_required('Administrador', 'Vendedor')
 @permission_required('cobros.add_cobrofactura', raise_exception=True)
-@require_POST
-def paypal_capturar_orden(request, factura_id, order_id):
-    """
-    Captura la orden ya aprobada por el comprador en PayPal, y si es exitosa,
-    crea el CobroFactura correspondiente (reutilizando comprobante + notificaciones).
-    """
+def paypal_retorno(request, factura_id):
+    """PayPal redirige aquí después de que el cliente aprueba el pago (?token=<order_id>)."""
     factura = get_object_or_404(Invoice, pk=factura_id)
+    order_id = request.GET.get('token')
+
+    if not order_id:
+        messages.error(request, 'No se recibió el identificador de la orden de PayPal.')
+        return redirect('cobros:cobro_create', factura_id=factura.id)
 
     try:
         resultado = capture_order(order_id)
     except Exception as e:
-        return JsonResponse({'error': f'Error al capturar el pago en PayPal: {e}'}, status=502)
+        messages.error(request, f'Error al capturar el pago en PayPal: {e}')
+        return redirect('cobros:cobro_create', factura_id=factura.id)
 
-    status = resultado.get('status')
-    if status != 'COMPLETED':
-        return JsonResponse({'error': f'PayPal no completó el pago (estado: {status}).'}, status=400)
+    if resultado.get('status') != 'COMPLETED':
+        messages.error(request, f"PayPal no completó el pago (estado: {resultado.get('status')}).")
+        return redirect('cobros:cobro_create', factura_id=factura.id)
 
     captura = resultado['purchase_units'][0]['payments']['captures'][0]
     monto_capturado = Decimal(captura['amount']['value'])
     transaction_id = captura['id']
 
     if monto_capturado > factura.saldo:
-        # Salvaguarda extrema: no debería pasar si validamos bien al crear la orden,
-        # pero si el saldo cambió entre medio (ej. otro cobro concurrente), no dejamos
-        # que se aplique un pago inconsistente.
-        return JsonResponse({
-            'error': 'El saldo de la factura cambió durante el proceso de pago. '
-                     'Contacta a soporte con el ID de transacción: ' + transaction_id
-        }, status=409)
+        messages.error(request, f'El saldo cambió durante el pago. Transacción PayPal: {transaction_id}. Contacta a soporte.')
+        return redirect('cobros:cobro_create', factura_id=factura.id)
 
     cobro = CobroFactura(
         factura=factura,
@@ -268,17 +279,11 @@ def paypal_capturar_orden(request, factura_id, order_id):
         referencia_externa=transaction_id,
         observacion=f'Pago procesado vía PayPal (Transacción: {transaction_id}).',
     )
-    cobro.save()  # dispara la misma validación/recalculo de saldo que el flujo manual
+    cobro.save()
 
-    # ── Comprobante + notificaciones (mismo flujo que el registro manual) ──
     pdf_bytes = generate_cobro_receipt_pdf(cobro)
     send_cobro_receipt_email(cobro, pdf_bytes)
     send_cobro_whatsapp(cobro)
 
     messages.success(request, f'Pago de ${cobro.valor} vía PayPal registrado correctamente!')
-
-    return JsonResponse({
-        'success': True,
-        'cobro_id': cobro.id,
-        'redirect_url': f"{reverse('cobros:cobro_list', kwargs={'factura_id': factura.id})}?voucher={cobro.id}",
-    })
+    return redirect(f"{reverse('cobros:cobro_list', kwargs={'factura_id': factura.id})}?voucher={cobro.id}")

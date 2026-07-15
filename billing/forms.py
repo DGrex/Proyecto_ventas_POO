@@ -18,6 +18,39 @@ class BrandForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class':'form-check-input'}),
         }
 
+
+class ProductGroupForm(forms.ModelForm):
+    class Meta:
+        model = ProductGroup
+        fields = ['name', 'is_active']
+        labels = {'name': 'Nombre del grupo', 'is_active': '¿Está activo?'}
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Electrodomésticos'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class SupplierForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = ['name', 'contact_name', 'email', 'phone', 'address', 'is_active']
+        labels = {
+            'name': 'Nombre de la empresa',
+            'contact_name': 'Persona de contacto',
+            'email': 'Correo electrónico',
+            'phone': 'Teléfono',
+            'address': 'Dirección',
+            'is_active': '¿Está activo?',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: GlobalSupply S.A.'}),
+            'contact_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Juan Pérez'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'contacto@proveedor.com'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 0991234567'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
         
 class InvoiceForm(forms.ModelForm):
     """Formulario premium para la cabecera de factura."""

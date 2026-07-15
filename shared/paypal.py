@@ -36,11 +36,8 @@ def get_access_token():
     return _token_cache['access_token']
 
 
-def create_order(amount, currency='USD', reference_id=None):
-    """
-    Crea una orden de pago en PayPal por el monto indicado.
-    Devuelve el JSON completo de la orden (incluye 'id' de la orden).
-    """
+
+def create_order(amount, currency='USD', reference_id=None, return_url=None, cancel_url=None):
     token = get_access_token()
     url = f'{settings.PAYPAL_API_BASE}/v2/checkout/orders'
 
@@ -56,20 +53,21 @@ def create_order(amount, currency='USD', reference_id=None):
     payload = {
         'intent': 'CAPTURE',
         'purchase_units': [purchase_unit],
+        'application_context': {
+            'return_url': return_url,
+            'cancel_url': cancel_url,
+            'user_action': 'PAY_NOW',
+            'shipping_preference': 'NO_SHIPPING',
+        },
     }
 
     response = requests.post(
-        url,
-        json=payload,
-        headers={
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {token}',
-        },
+        url, json=payload,
+        headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {token}'},
         timeout=10,
     )
     response.raise_for_status()
     return response.json()
-
 
 def capture_order(order_id):
     """

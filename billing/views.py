@@ -13,7 +13,7 @@ from django.db.models import Q
 from django.utils.decorators import method_decorator
 from .models import *
 from purchasing.models import Purchase
-from .forms import BrandForm, InvoiceForm, InvoiceDetailFormSet, ProductForm, CustomerForm
+from .forms import BrandForm, InvoiceForm, InvoiceDetailFormSet, ProductForm, CustomerForm, ProductGroupForm, SupplierForm
 from decimal import Decimal
 from shared.mixins import StaffRequiredMixin, ExportMixin, GroupRequiredMixin, ProtectedDeleteMixin, PermissionOrRedirectMixin
 from shared.decorators import audit_action, group_required
@@ -450,11 +450,11 @@ class ProductGroupListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, P
 class ProductGroupCreateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, CreateView):
     permission_required = 'billing.add_productgroup'
     group_required = ['Administrador', 'Analista de Compras']
-    model = ProductGroup; fields = ['name','is_active']; template_name = 'billing/productgroup_form.html'; success_url = reverse_lazy('billing:productgroup_list')
+    model = ProductGroup; form_class = ProductGroupForm; template_name = 'billing/productgroup_form.html'; success_url = reverse_lazy('billing:productgroup_list')
 class ProductGroupUpdateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, UpdateView):
     permission_required = 'billing.change_productgroup'
     group_required = ['Administrador', 'Analista de Compras']
-    model = ProductGroup; fields = ['name','is_active']; template_name = 'billing/productgroup_form.html'; success_url = reverse_lazy('billing:productgroup_list')
+    model = ProductGroup; form_class = ProductGroupForm; template_name = 'billing/productgroup_form.html'; success_url = reverse_lazy('billing:productgroup_list')
 class ProductDeleteView(ProtectedDeleteMixin, LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, PermissionOrRedirectMixin, DeleteView):
     protected_error_message = "No se puede eliminar el producto '{object}' porque está incluido en facturas o compras existentes."
     permission_required = 'billing.delete_product'
@@ -508,11 +508,11 @@ class SupplierListView(LoginRequiredMixin,GroupRequiredMixin, ExportMixin, Permi
 class SupplierCreateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, CreateView):
     permission_required = 'billing.add_supplier'
     group_required = ['Administrador', 'Analista de Compras']
-    model = Supplier; fields = ['name','contact_name','email','phone','address','is_active']; template_name = 'billing/supplier_form.html'; success_url = reverse_lazy('billing:supplier_list')
+    model = Supplier; form_class = SupplierForm; template_name = 'billing/supplier_form.html'; success_url = reverse_lazy('billing:supplier_list')
 class SupplierUpdateView(LoginRequiredMixin,GroupRequiredMixin, PermissionOrRedirectMixin, UpdateView):
     permission_required = 'billing.change_supplier'
     group_required = ['Administrador', 'Analista de Compras']
-    model = Supplier; fields = ['name','contact_name','email','phone','address','is_active']; template_name = 'billing/supplier_form.html'; success_url = reverse_lazy('billing:supplier_list')
+    model = Supplier; form_class = SupplierForm; template_name = 'billing/supplier_form.html'; success_url = reverse_lazy('billing:supplier_list')
 class SupplierDeleteView(ProtectedDeleteMixin, LoginRequiredMixin,GroupRequiredMixin, StaffRequiredMixin, PermissionOrRedirectMixin, DeleteView):
     protected_error_message = "No se puede eliminar el proveedor '{object}' porque tiene compras asociadas. Elimine primero esas compras, o considere desactivarlo en su lugar."
     permission_required = 'billing.delete_supplier'

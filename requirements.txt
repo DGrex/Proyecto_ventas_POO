@@ -18,3 +18,7 @@ reportlab==5.0.0
 
 # Utilidad para detección de codificación de archivos
 charset-normalizer==3.4.7
+
+requests
+
+python-dotenv

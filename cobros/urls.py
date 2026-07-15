@@ -10,6 +10,6 @@ urlpatterns = [
     path('pago/<int:pk>/editar/', views.CobroUpdateView.as_view(), name='cobro_update'),
     path('pago/<int:pk>/eliminar/', views.CobroDeleteView.as_view(), name='cobro_delete'),
     path('pago/<int:pk>/comprobante/', views.cobro_comprobante_pdf, name='cobro_comprobante'),
-    path('factura/<int:factura_id>/paypal/crear-orden/', views.paypal_crear_orden, name='paypal_crear_orden'),
-    path('factura/<int:factura_id>/paypal/capturar-orden/<str:order_id>/', views.paypal_capturar_orden, name='paypal_capturar_orden'),
+path('factura/<int:factura_id>/paypal/iniciar/', views.paypal_iniciar_pago, name='paypal_iniciar_pago'),
+    path('factura/<int:factura_id>/paypal/retorno/', views.paypal_retorno, name='paypal_retorno'),
 ]
