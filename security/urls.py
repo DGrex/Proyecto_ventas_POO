@@ -8,6 +8,8 @@ urlpatterns = [
     # NOTA: se eliminó la ruta pública de auto-registro ('register/').
     # Los usuarios ahora se crean únicamente desde 'users/create/' (solo Administrador).
     path('login/', views.SecurityLoginView.as_view(), name='login'),
+    path('verify-2fa/', views.Verify2FAView.as_view(), name='verify_2fa'),
+    path('resend-2fa/', views.resend_2fa, name='resend_2fa'),
     path('logout/', views.SecurityLogoutView.as_view(), name='logout'),
 
     # Usuarios

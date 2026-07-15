@@ -486,3 +486,32 @@ def send_user_activation_email(user, activation_url):
         return True, 'Enlace de activación enviado por correo correctamente.'
     except Exception as e:
         return False, f'No se pudo enviar el correo de activación: {e}'
+
+
+# ══════════════════════════════════════════════════════════════════
+# AUTENTICACIÓN DE DOS PASOS (2FA) POR CORREO
+# ══════════════════════════════════════════════════════════════════
+
+def send_2fa_code_email(user, codigo):
+    """Envía el código de verificación de 2 pasos al correo del usuario."""
+    if not user.email:
+        return False, 'El usuario no tiene un correo registrado.'
+
+    subject = 'TecnoStock - Código de verificación de acceso'
+    body = (
+        f'Hola {user.first_name or user.username},\n\n'
+        f'Tu código de verificación para iniciar sesión es:\n\n'
+        f'    {codigo}\n\n'
+        f'Este código expira en 10 minutos. Si tú no intentaste iniciar sesión, '
+        f'ignora este mensaje y considera cambiar tu contraseña.\n\n'
+        f'TecnoStock S.A.'
+    )
+    email = EmailMessage(
+        subject=subject, body=body,
+        from_email=settings.DEFAULT_FROM_EMAIL, to=[user.email],
+    )
+    try:
+        email.send(fail_silently=False)
+        return True, 'Código enviado correctamente.'
+    except Exception as e:
+        return False, f'Error al enviar el código: {e}'

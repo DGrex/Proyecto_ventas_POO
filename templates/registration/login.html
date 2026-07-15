@@ -26,6 +26,12 @@
               </div>
               <form method="post" novalidate>
                 {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger rounded-3 mb-3" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                  {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
                 {% for field in form %}
                 <div class="mb-3 auth-form-group">
                   <label class="form-label">{{ field.label }}</label>
