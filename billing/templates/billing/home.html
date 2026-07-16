@@ -1,85 +1,25 @@
 {% extends 'billing/base.html' %}
 {% load security_tags %}
 
-{% block title %}Home - Sales System{% endblock %}
+{% block title %}Inicio{% endblock %}
 {% block content %}
-<style>
-  .home-welcome {
-    background: #ffffff;
-    border-radius: 1.25rem;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
-  }
-  .summary-card {
-    border: none;
-    border-radius: 1.25rem;
-    min-height: 170px;
-    box-shadow: 0 18px 30px rgba(15, 23, 42, 0.06);
-  }
-  .summary-card .card-body {
-    padding: 1.75rem 1.5rem;
-  }
-  .summary-card h2 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-  }
-  .summary-card p {
-    margin-bottom: 1rem;
-    font-weight: 600;
-  }
-  .summary-card a {
-    color: inherit;
-    text-decoration: none;
-    font-weight: 600;
-  }
-  .summary-card-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 54px;
-    height: 54px;
-    border-radius: 18px;
-    margin-bottom: 1rem;
-    font-size: 1.3rem;
-  }
-  .summary-card-icon-primary { background: rgba(255,255,255,0.18); }
-  .summary-card-icon-success { background: rgba(255,255,255,0.18); }
-  .summary-card-icon-info { background: rgba(255,255,255,0.18); }
-  .summary-card-icon-warning { background: rgba(0,0,0,0.12); }
-  .summary-card-icon-secondary { background: rgba(255,255,255,0.18); }
-  .summary-card .badge {
-    font-size: 0.72rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .home-panel {
-    border-radius: 1.25rem;
-    border: 1px solid #e5e7eb;
-    background: #f8fafc;
-  }
-  .home-panel .card-body {
-    padding: 2rem;
-  }
-  .recent-list td, .recent-list th {
-    vertical-align: middle;
-  }
-</style>
 
-<div class="p-4 mb-4 home-welcome">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
-    <div>
-      <h1 class="mb-2">Hola, {{ user.first_name|default:user.username }}.</h1>
-      <p class="lead text-muted mb-0">Bienvenido al panel de control. Gestiona el sistema de acuerdo a tus permisos asignados.</p>
-    </div>
-    <div class="d-flex gap-2 flex-wrap">
-      <!-- BOTONES SUPERIORES FILTRADOS -->
-      {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
-        <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-primary rounded-pill px-4">Ver facturas</a>
-      {% endif %}
-      {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
-        <a href="{% url 'purchasing:purchase_list' %}" class="btn btn-primary rounded-pill px-4">Ver compras</a>
-      {% endif %}
-    </div>
+<div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+  <div>
+    <h1><span class="header-icon"><i class="bi bi-house-door-fill"></i></span>Hola, {{ user.first_name|default:user.username }}</h1>
+    <p>Bienvenido al panel de control. Gestiona el sistema de acuerdo a tus permisos asignados.</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
+      <a href="{% url 'billing:invoice_list' %}" class="btn btn-light fw-bold rounded-pill px-4 shadow-sm text-primary">
+        <i class="bi bi-receipt me-1"></i>Ver facturas
+      </a>
+    {% endif %}
+    {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
+      <a href="{% url 'purchasing:purchase_list' %}" class="btn btn-outline-light fw-bold rounded-pill px-4">
+        <i class="bi bi-cart-fill me-1"></i>Ver compras
+      </a>
+    {% endif %}
   </div>
 </div>
 
@@ -87,69 +27,49 @@
 <div class="row g-3 mb-4">
   {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
   <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-    <div class="card text-white summary-card bg-primary">
-      <div class="card-body text-center">
-        <div class="summary-card-icon summary-card-icon-primary">
-          <i class="bi bi-tags-fill"></i>
-        </div>
-        <h2>{{ total_brands }}</h2>
-        <p>Marcas</p>
-        <a href="{% url 'billing:brand_list' %}">Ver todo</a>
-      </div>
+    <div class="stat-tile">
+      <div class="stat-icon stat-icon-primary"><i class="bi bi-tags-fill"></i></div>
+      <p class="stat-value">{{ total_brands }}</p>
+      <div class="stat-label">Marcas</div>
+      <a href="{% url 'billing:brand_list' %}" class="stat-link">Ver todo <i class="bi bi-arrow-right"></i></a>
     </div>
   </div>
   <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-    <div class="card text-white summary-card bg-success">
-      <div class="card-body text-center">
-        <div class="summary-card-icon summary-card-icon-success">
-          <i class="bi bi-box-seam"></i>
-        </div>
-        <h2>{{ total_products }}</h2>
-        <p>Productos</p>
-        <a href="{% url 'billing:product_list' %}">Ver todo</a>
-      </div>
+    <div class="stat-tile">
+      <div class="stat-icon stat-icon-success"><i class="bi bi-box-seam-fill"></i></div>
+      <p class="stat-value">{{ total_products }}</p>
+      <div class="stat-label">Productos</div>
+      <a href="{% url 'billing:product_list' %}" class="stat-link">Ver todo <i class="bi bi-arrow-right"></i></a>
     </div>
   </div>
   {% endif %}
 
   {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
   <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-    <div class="card text-white summary-card bg-info">
-      <div class="card-body text-center">
-        <div class="summary-card-icon summary-card-icon-info">
-          <i class="bi bi-people-fill"></i>
-        </div>
-        <h2>{{ total_customers }}</h2>
-        <p>Clientes</p>
-        <a href="{% url 'billing:customer_list' %}">Ver todo</a>
-      </div>
+    <div class="stat-tile">
+      <div class="stat-icon stat-icon-info"><i class="bi bi-person-vcard-fill"></i></div>
+      <p class="stat-value">{{ total_customers }}</p>
+      <div class="stat-label">Clientes</div>
+      <a href="{% url 'billing:customer_list' %}" class="stat-link">Ver todo <i class="bi bi-arrow-right"></i></a>
     </div>
   </div>
   <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-    <div class="card text-dark summary-card bg-warning">
-      <div class="card-body text-center">
-        <div class="summary-card-icon summary-card-icon-warning">
-          <i class="bi bi-receipt-cutoff-fill"></i>
-        </div>
-        <h2>{{ total_invoices }}</h2>
-        <p>Facturas</p>
-        <a href="{% url 'billing:invoice_list' %}">Ver todo</a>
-      </div>
+    <div class="stat-tile">
+      <div class="stat-icon stat-icon-warning"><i class="bi bi-receipt"></i></div>
+      <p class="stat-value">{{ total_invoices }}</p>
+      <div class="stat-label">Facturas</div>
+      <a href="{% url 'billing:invoice_list' %}" class="stat-link">Ver todo <i class="bi bi-arrow-right"></i></a>
     </div>
   </div>
   {% endif %}
 
   {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
   <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-    <div class="card text-white summary-card bg-secondary">
-      <div class="card-body text-center">
-        <div class="summary-card-icon summary-card-icon-secondary">
-          <i class="bi bi-cart-check-fill"></i>
-        </div>
-        <h2>{{ total_purchases }}</h2>
-        <p>Compras</p>
-        <a href="{% url 'purchasing:purchase_list' %}">Ver todo</a>
-      </div>
+    <div class="stat-tile">
+      <div class="stat-icon stat-icon-secondary"><i class="bi bi-cart-check-fill"></i></div>
+      <p class="stat-value">{{ total_purchases }}</p>
+      <div class="stat-label">Compras</div>
+      <a href="{% url 'purchasing:purchase_list' %}" class="stat-link">Ver todo <i class="bi bi-arrow-right"></i></a>
     </div>
   </div>
   {% endif %}
@@ -159,35 +79,38 @@
 <div class="row g-4">
   {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
   <div class="col-lg-6">
-    <div class="card home-panel">
-      <div class="card-header bg-white border-0 pb-0">
-        <h5 class="mb-0">Facturas recientes</h5>
-      </div>
-      <div class="card-body pt-0">
-        <div class="table-responsive">
-          <table class="table recent-list mb-0">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Cliente</th>
-                <th>Fecha</th>
-                <th class="text-end">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for inv in recent_invoices %}
-              <tr>
-                <td>{{ inv.id }}</td>
-                <td>{{ inv.customer }}</td>
-                <td>{{ inv.invoice_date|date:"d/m/Y" }}</td>
-                <td class="text-end">${{ inv.total }}</td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="4" class="text-center text-muted">Aún no hay facturas.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+    <div class="glass-card p-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-receipt me-2 text-primary"></i>Facturas recientes</h5>
+      <div class="products-table">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in recent_invoices %}
+            <tr>
+              <td class="text-muted small">{{ inv.id }}</td>
+              <td class="fw-semibold">{{ inv.customer }}</td>
+              <td>{{ inv.invoice_date|date:"d/m/Y" }}</td>
+              <td class="text-end fw-bold">${{ inv.total }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <i class="bi bi-inbox"></i>
+                  <span>Aún no hay facturas.</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -195,60 +118,66 @@
 
   {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
   <div class="col-lg-6">
-    <div class="card home-panel">
-      <div class="card-header bg-white border-0 pb-0">
-        <h5 class="mb-0">Compras recientes</h5>
-      </div>
-      <div class="card-body pt-0">
-        <div class="table-responsive">
-          <table class="table recent-list mb-0">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Proveedor</th>
-                <th>Fecha</th>
-                <th class="text-end">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for purchase in recent_purchases %}
-              <tr>
-                <td>{{ purchase.id }}</td>
-                <td>{{ purchase.supplier.name }}</td>
-                <td>{{ purchase.purchase_date|date:"d/m/Y" }}</td>
-                <td class="text-end">${{ purchase.total }}</td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="4" class="text-center text-muted">Aún no hay compras registradas.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+    <div class="glass-card p-4 mb-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-cart-check-fill me-2 text-primary"></i>Compras recientes</h5>
+      <div class="products-table">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Proveedor</th>
+              <th>Fecha</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for purchase in recent_purchases %}
+            <tr>
+              <td class="text-muted small">{{ purchase.id }}</td>
+              <td class="fw-semibold">{{ purchase.supplier.name }}</td>
+              <td>{{ purchase.purchase_date|date:"d/m/Y" }}</td>
+              <td class="text-end fw-bold">${{ purchase.total }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <i class="bi bi-inbox"></i>
+                  <span>Aún no hay compras registradas.</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <div class="card home-panel mt-4">
-      <div class="card-header bg-white border-0 pb-0">
-        <h5 class="mb-0">Productos con bajo stock</h5>
-      </div>
-      <div class="card-body pt-0">
-        <div class="table-responsive">
-          <table class="table recent-list mb-0">
-            <thead>
-              <tr><th>Producto</th><th class="text-end">Stock</th></tr>
-            </thead>
-            <tbody>
-              {% for p in low_stock %}
-              <tr>
-                <td>{{ p.name }}</td>
-                <td class="text-end"><span class="badge bg-danger">{{ p.stock }}</span></td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="2" class="text-center text-success">Todos los productos tienen stock suficiente.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+    <div class="glass-card p-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Productos con bajo stock</h5>
+      <div class="products-table">
+        <table class="table mb-0">
+          <thead>
+            <tr><th>Producto</th><th class="text-end">Stock</th></tr>
+          </thead>
+          <tbody>
+            {% for p in low_stock %}
+            <tr>
+              <td class="fw-semibold">{{ p.name }}</td>
+              <td class="text-end"><span class="badge-inactive">{{ p.stock }}</span></td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="2">
+                <div class="empty-state">
+                  <i class="bi bi-check-circle"></i>
+                  <span>Todos los productos tienen stock suficiente.</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

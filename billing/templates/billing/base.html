@@ -8,240 +8,483 @@
   <title>{% block title %}Sales{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* ============================================================
+       DESIGN SYSTEM — TecnoStock
+       Tokens de color, tipografía, espaciado y componentes globales.
+       Toda plantilla hereda esto: evita reinventar estilos por página.
+       ============================================================ */
     :root {
-      --primary-color: #2563eb;
-      --primary-dark: #1d4ed8;
+      /* Marca / primario */
+      --color-primary-50:  #eff6ff;
+      --color-primary-100: #dbeafe;
+      --color-primary-200: #bfdbfe;
+      --color-primary-300: #93c5fd;
+      --color-primary-500: #2563eb;
+      --color-primary-600: #1d4ed8;
+      --color-primary-700: #1e40af;
+
+      /* Semánticos */
+      --color-success-50:  #ecfdf5;
+      --color-success-100: #d1fae5;
+      --color-success-300: #86efac;
+      --color-success-600: #047857;
+      --color-success-700: #065f46;
+
+      --color-warning-50:  #fffbeb;
+      --color-warning-100: #fef3c7;
+      --color-warning-600: #b45309;
+      --color-warning-700: #92400e;
+
+      --color-danger-50:  #fef2f2;
+      --color-danger-100: #fee2e2;
+      --color-danger-200: #fecaca;
+      --color-danger-600: #dc2626;
+      --color-danger-700: #b91c1c;
+      --color-danger-800: #991b1b;
+
+      --color-purple-50:  #f5f3ff;
+      --color-purple-100: #ede9fe;
+      --color-purple-600: #7c3aed;
+      --color-purple-700: #5b21b6;
+
+      /* Neutros */
+      --gray-25:  #fafbfc;
+      --gray-50:  #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-150: #eef1f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #dce2ea;
+      --gray-400: #cbd5e1;
+      --gray-500: #94a3b8;
+      --gray-600: #6b7280;
+      --gray-700: #475569;
+      --gray-800: #334155;
+      --gray-900: #1e293b;
+
+      /* Alias usados en el resto del sistema */
+      --primary-color: var(--color-primary-500);
+      --primary-dark: var(--color-primary-600);
       --surface: #ffffff;
-      --surface-soft: #f8fafc;
-      --card-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      --surface-soft: var(--gray-50);
+
+      /* Escalas */
+      --radius-sm: 8px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+      --radius-pill: 999px;
+
+      --shadow-xs: 0 1px 2px rgba(15, 23, 42, .05);
+      --shadow-sm: 0 2px 12px rgba(15, 23, 42, .05);
+      --shadow-md: 0 8px 24px rgba(15, 23, 42, .07);
+      --shadow-lg: 0 18px 40px rgba(15, 23, 42, .08);
+      --shadow-xl: 0 28px 70px rgba(15, 23, 42, .12);
+      --card-shadow: var(--shadow-lg);
+
+      --transition-fast: .15s ease;
+      --transition-base: .2s ease;
+
+      --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
     }
 
+    * { scrollbar-width: thin; scrollbar-color: var(--gray-400) transparent; }
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: var(--gray-400); border-radius: var(--radius-pill); }
+    *::-webkit-scrollbar-track { background: transparent; }
+
+    html { scroll-behavior: smooth; }
+
     body {
-      background-color: #f8fafc;
+      font-family: var(--font-sans);
+      background-color: var(--surface-soft);
+      color: var(--gray-800);
       min-height: 100vh;
     }
 
-    .navbar {
-      min-height: 64px;
+    h1, h2, h3, h4, h5, h6 { font-family: var(--font-sans); font-weight: 800; letter-spacing: -.01em; color: var(--gray-900); }
+
+    a { transition: color var(--transition-fast); }
+
+    :focus-visible {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 2px;
+      border-radius: 4px;
     }
 
-    .navbar-brand {
-      font-weight: 700;
-      letter-spacing: 0.03em;
+    /* ── Formularios (global) ─────────────────────────────────── */
+    .form-control, .form-select, .form-control-premium, .form-select-premium {
+      font-family: var(--font-sans);
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-sm);
+      padding: .55rem .85rem;
+      font-size: .92rem;
+      background-color: #fff;
+      color: var(--gray-900);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .form-control:focus, .form-select:focus, .form-control-premium:focus, .form-select-premium:focus {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, .14);
+      background-color: #fff;
+      outline: none;
+    }
+    .form-control::placeholder, .form-control-premium::placeholder { color: var(--gray-500); }
+    .form-control-premium[readonly], .form-control-premium:disabled {
+      background-color: var(--gray-100); color: var(--gray-600); cursor: not-allowed;
+    }
+    .form-control.is-invalid, .form-select.is-invalid,
+    .form-control-premium.is-invalid, .form-select-premium.is-invalid {
+      border-color: var(--color-danger-600); background-color: var(--color-danger-50);
+    }
+    .form-control.is-invalid:focus, .form-control-premium.is-invalid:focus {
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, .14);
+    }
+    .form-check-input { cursor: pointer; }
+    .form-check-input:checked { background-color: var(--color-primary-500); border-color: var(--color-primary-500); }
+    .form-check-input:focus { box-shadow: 0 0 0 3px rgba(37, 99, 235, .14); }
+    label.form-label, .form-label-premium { font-weight: 600; color: var(--gray-700); font-size: .88rem; }
+
+    /* Tabla de líneas de detalle (formsets de factura / compra) */
+    .details-table thead { background-color: var(--gray-900); color: #fff; }
+    .details-table th { font-weight: 600; padding: .75rem 1rem; border: none; }
+    .details-table td { padding: .75rem 1rem; vertical-align: middle; }
+    .details-table .input-group { width: 100%; }
+    .details-table .input-group .form-control,
+    .details-table td .form-select, .details-table td .form-control { width: 100%; min-width: 75px; }
+    .total-row { background-color: var(--color-warning-100) !important; font-weight: bold; }
+    .btn-delete-row {
+      color: var(--color-danger-600); border: 1px solid var(--color-danger-200);
+      background-color: var(--color-danger-50); transition: all var(--transition-base);
+    }
+    .btn-delete-row:hover { background-color: var(--color-danger-600); color: #fff; border-color: var(--color-danger-600); }
+    .badge-new {
+      background-color: var(--color-warning-600); color: #fff; font-weight: bold;
+      font-size: .8rem; padding: .4em .8em; border-radius: 6px;
     }
 
-    .navbar-nav .nav-link {
-      transition: color 0.2s ease;
-    }
+    /* Resumen de factura / compra (usado en cobros y pagos) */
+    .invoice-summary, .compra-summary { background: var(--gray-50); border-radius: 10px; padding: 16px 20px; }
+    .invoice-summary .label, .compra-summary .label { font-size: .72rem; text-transform: uppercase; color: var(--gray-600); font-weight: 700; }
+    .invoice-summary .value, .compra-summary .value { font-size: 1rem; font-weight: 700; color: var(--gray-900); }
+    .saldo-value { color: var(--color-danger-700); }
 
-    .navbar-nav .nav-link:hover,
-    .navbar-nav .nav-link.active {
-      color: #dbeafe;
-    }
+    /* ── Botones base ─────────────────────────────────────────── */
+    .btn { font-family: var(--font-sans); font-weight: 600; transition: all var(--transition-fast); }
+    .btn:focus { box-shadow: 0 0 0 3px rgba(37, 99, 235, .18); }
+    .btn-primary { background: var(--color-primary-500); border-color: var(--color-primary-500); }
+    .btn-primary:hover { background: var(--color-primary-600); border-color: var(--color-primary-600); }
+    .btn-outline-primary { color: var(--color-primary-500); border-color: var(--color-primary-300); }
+    .btn-outline-primary:hover { background: var(--color-primary-500); border-color: var(--color-primary-500); }
 
+    /* ── Navbar ───────────────────────────────────────────────── */
+    .app-navbar {
+      background: linear-gradient(120deg, var(--color-primary-600) 0%, var(--color-primary-500) 55%, #1e3a8a 100%);
+      min-height: 66px;
+      box-shadow: 0 4px 24px rgba(15, 23, 42, .18);
+      position: sticky;
+      top: 0;
+      z-index: 1030;
+    }
+    .app-navbar .navbar-brand {
+      font-weight: 800;
+      letter-spacing: .01em;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff !important;
+    }
+    .app-navbar .brand-icon {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, .16);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.05rem;
+      backdrop-filter: blur(2px);
+    }
+    .app-navbar .navbar-nav .nav-link {
+      color: rgba(255, 255, 255, .82);
+      font-weight: 600;
+      font-size: .88rem;
+      padding: .55rem .9rem !important;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+    .app-navbar .navbar-nav .nav-link:hover,
+    .app-navbar .navbar-nav .nav-link:focus-visible,
+    .app-navbar .navbar-nav .nav-link.show {
+      color: #fff;
+      background: rgba(255, 255, 255, .12);
+    }
+    .app-navbar .navbar-nav .nav-item + .nav-item { margin-left: 2px; }
+    .app-navbar .dropdown-menu {
+      border: none;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 6px;
+      margin-top: 8px !important;
+    }
+    .app-navbar .dropdown-item {
+      border-radius: var(--radius-sm);
+      font-size: .86rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      padding: .5rem .75rem;
+    }
+    .app-navbar .dropdown-item:hover { background: var(--color-primary-50); color: var(--color-primary-600); }
+    .app-navbar .navbar-toggler { border: none; box-shadow: none; }
+
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255, 255, 255, .1);
+      border-radius: var(--radius-pill);
+      padding: 4px 6px 4px 4px;
+    }
+    .user-chip .avatar-circle {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255, 255, 255, .22);
+      color: #fff; font-weight: 800; font-size: .8rem;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .user-chip .user-meta { line-height: 1.15; }
+    .user-chip .user-name { color: #fff; font-weight: 700; font-size: .82rem; display: block; }
+    .user-chip .user-role { color: rgba(255, 255, 255, .7); font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
     .btn-logout {
       text-decoration: none;
-      min-width: 130px;
+      min-width: auto;
+      background: rgba(255, 255, 255, .12);
+      border: 1px solid rgba(255, 255, 255, .28);
+      color: #fff;
     }
+    .btn-logout:hover { background: rgba(255, 255, 255, .22); color: #fff; }
 
-    .premium-card,
-    .delete-card {
+    /* ── Alertas / mensajes flash ─────────────────────────────── */
+    .alert {
       border: none;
-      border-radius: 1rem;
-      background: var(--surface);
-      box-shadow: var(--card-shadow);
-      overflow: hidden;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      font-size: .88rem;
+      font-weight: 500;
+      border-left: 4px solid transparent;
+    }
+    .alert-success { background: var(--color-success-50); color: var(--color-success-700); border-left-color: var(--color-success-600); }
+    .alert-danger  { background: var(--color-danger-50);  color: var(--color-danger-800);  border-left-color: var(--color-danger-600); }
+    .alert-warning { background: var(--color-warning-50); color: var(--color-warning-700); border-left-color: var(--color-warning-600); }
+    .alert-info    { background: var(--color-primary-50); color: var(--color-primary-700); border-left-color: var(--color-primary-500); }
+
+    /* ══════════════════════════════════════════════════════════
+       COMPONENTES COMPARTIDOS entre listados, formularios y detalle
+       (antes duplicados con pequeñas variaciones en cada plantilla)
+       ══════════════════════════════════════════════════════════ */
+
+    /* Encabezado de página con gradiente de marca */
+    .page-header {
+      background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%);
+      border-radius: var(--radius-xl);
+      padding: 26px 30px;
+      color: #fff;
+      box-shadow: var(--shadow-md);
+    }
+    .page-header h1 { font-weight: 800; font-size: 1.5rem; margin: 0; letter-spacing: -.02em; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .page-header p  { margin: 5px 0 0; opacity: .88; font-size: .88rem; }
+    .page-header .header-icon {
+      width: 42px; height: 42px; border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, .16);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
     }
 
-    .premium-card-header,
-    .delete-card-header {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    /* Tarjeta translúcida para filtros / paneles secundarios */
+    .glass-card {
+      background: #fff;
+      border: 1px solid var(--gray-150);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+    .filter-label {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--gray-600); margin-bottom: 5px;
+    }
+    .form-control-sm, .form-select-sm {
+      border-radius: var(--radius-sm); border: 1px solid var(--gray-300);
+      font-size: .84rem; padding: 7px 11px;
+    }
+
+    /* Tabla de datos estándar (listados) */
+    .products-table, .data-table {
+      background: #fff; border: 1px solid var(--gray-150); border-radius: var(--radius-lg);
+      overflow: hidden; box-shadow: var(--shadow-sm);
+    }
+    .products-table table, .data-table table { margin-bottom: 0; }
+    .products-table thead th, .data-table thead th {
+      background: var(--gray-50); border-bottom: 2px solid var(--gray-150);
+      color: var(--gray-600); font-size: .7rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .06em; padding: 14px 16px; white-space: nowrap;
+    }
+    .products-table tbody td, .data-table tbody td {
+      padding: 13px 16px; vertical-align: middle; border-bottom: 1px solid var(--gray-100);
+      font-size: .875rem; color: var(--gray-800);
+    }
+    .products-table tbody tr:last-child td, .data-table tbody tr:last-child td { border-bottom: none; }
+    .products-table tbody tr:hover, .data-table tbody tr:hover { background: var(--gray-25); }
+
+    /* Tarjetas de KPI (dashboard / home) */
+    .stat-tile {
+      background: #fff; border: 1px solid var(--gray-150); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm); padding: 1.5rem; height: 100%;
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+    }
+    .stat-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .stat-tile .stat-icon {
+      width: 52px; height: 52px; border-radius: var(--radius-md); display: inline-flex;
+      align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: .85rem;
+    }
+    .stat-tile .stat-icon-primary   { background: var(--color-primary-50);   color: var(--color-primary-600); }
+    .stat-tile .stat-icon-success   { background: var(--color-success-50);   color: var(--color-success-600); }
+    .stat-tile .stat-icon-warning   { background: var(--color-warning-100);  color: var(--color-warning-700); }
+    .stat-tile .stat-icon-info      { background: var(--color-purple-50);    color: var(--color-purple-600); }
+    .stat-tile .stat-icon-secondary { background: var(--gray-100);           color: var(--gray-700); }
+    .stat-tile .stat-value { font-size: 2rem; font-weight: 800; color: var(--gray-900); margin: 0; line-height: 1.1; }
+    .stat-tile .stat-label { font-size: .82rem; font-weight: 700; color: var(--gray-600); margin-top: .3rem; }
+    .stat-tile .stat-link { font-size: .8rem; font-weight: 700; color: var(--color-primary-500); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-top: .75rem; }
+    .stat-tile .stat-link:hover { color: var(--color-primary-600); text-decoration: underline; }
+
+    /* Estado vacío */
+    .empty-state { padding: 40px 20px; text-align: center; color: var(--gray-500); }
+    .empty-state i { font-size: 1.8rem; color: var(--gray-400); display: block; margin-bottom: 8px; }
+    .empty-state span { font-size: .86rem; font-weight: 500; }
+
+    /* Insignias de estado */
+    .badge-active, .badge-users   { background: var(--color-success-100); color: var(--color-success-700); }
+    .badge-inactive                { background: var(--color-danger-100); color: var(--color-danger-800); }
+    .badge-pending                 { background: var(--color-warning-100); color: var(--color-warning-700); }
+    .badge-role, .badge-model, .badge-count { background: var(--color-primary-100); color: var(--color-primary-600); }
+    .badge-norole { background: var(--gray-100); color: var(--gray-600); }
+    .badge-active, .badge-inactive, .badge-pending, .badge-role, .badge-norole,
+    .badge-count, .badge-users, .badge-model {
+      font-size: .7rem; font-weight: 700; border-radius: var(--radius-pill);
+      padding: 3px 10px; display: inline-block;
+    }
+
+    /* Botones de acción compactos dentro de tablas */
+    .btn-view, .btn-edit, .btn-del, .btn-pay, .btn-pdf, .btn-excel {
+      border-radius: var(--radius-sm); font-weight: 700; text-decoration: none;
+      display: inline-block; transition: all var(--transition-fast);
+      border: 1px solid transparent;
+    }
+    .btn-view, .btn-edit {
+      background: var(--color-primary-50); color: var(--color-primary-600); border-color: var(--color-primary-200);
+      padding: 4px 10px; font-size: .78rem;
+    }
+    .btn-view:hover, .btn-edit:hover { background: var(--color-primary-100); color: var(--color-primary-700); }
+    .btn-del {
+      background: var(--color-danger-100); color: var(--color-danger-700); border-color: var(--color-danger-200);
+      padding: 4px 10px; font-size: .78rem;
+    }
+    .btn-del:hover { background: var(--color-danger-200); }
+    .btn-pay {
+      background: var(--color-success-50); color: var(--color-success-600); border-color: var(--color-success-300);
+      padding: 4px 10px; font-size: .78rem;
+    }
+    .btn-pay:hover { background: var(--color-success-100); }
+    .btn-pdf {
+      background: var(--color-primary-50); color: var(--color-primary-600); border-color: var(--color-primary-300);
+      font-size: .82rem; padding: 7px 16px;
+    }
+    .btn-pdf:hover { background: var(--color-primary-100); color: var(--color-primary-700); }
+    .btn-excel {
+      background: var(--color-success-50); color: var(--color-success-600); border-color: var(--color-success-300);
+      font-size: .82rem; padding: 7px 16px;
+    }
+    .btn-excel:hover { background: var(--color-success-100); color: var(--color-success-700); }
+
+    /* Paginación */
+    .page-link { color: var(--color-primary-500); border-radius: var(--radius-sm) !important; margin: 0 2px; border-color: var(--gray-150); font-size: .85rem; }
+    .page-item.active .page-link { background: var(--color-primary-500); border-color: var(--color-primary-500); color: #fff; }
+    .page-item.disabled .page-link { color: var(--gray-400); }
+
+    /* ── Tarjetas premium (formularios, confirmaciones) ───────── */
+    .premium-card, .delete-card {
+      border: none; border-radius: var(--radius-xl);
+      background: var(--surface); box-shadow: var(--card-shadow); overflow: hidden;
+    }
+    .premium-card-header, .delete-card-header {
+      background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%);
       padding: 1.5rem 2rem;
     }
+    .premium-card-body { padding: 2rem; }
 
-    .premium-card-body {
-      padding: 2rem;
+    .btn-premium-save, .btn-premium-cancel, .btn-confirm-delete, .btn-cancel-delete {
+      display: inline-block; text-decoration: none; text-align: center; cursor: pointer;
     }
-
-    .form-label-premium {
-      display: inline-block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      color: #334155;
-    }
-
     .btn-premium-save {
-      background-color: var(--primary-color);
-      border-color: var(--primary-color);
-      color: #ffffff;
-      border-radius: 0.75rem;
-      padding: 0.75rem 1.75rem;
-      font-weight: 600;
-      transition: all 0.2s ease;
+      background-color: var(--primary-color); border-color: var(--primary-color); color: #fff;
+      border-radius: .75rem; padding: .75rem 1.75rem; font-weight: 700; transition: all var(--transition-base);
     }
-
-    .btn-premium-save:hover {
-      background-color: var(--primary-dark);
-      border-color: var(--primary-dark);
-      transform: translateY(-1px);
-    }
-
+    .btn-premium-save:hover { background-color: var(--primary-dark); border-color: var(--primary-dark); color: #fff; transform: translateY(-1px); box-shadow: var(--shadow-md); }
     .btn-premium-cancel {
-      border-radius: 0.75rem;
-      padding: 0.75rem 1.75rem;
-      font-weight: 600;
-      color: #475569;
-      background-color: #ffffff;
-      border: 1px solid #cbd5e1;
-      transition: all 0.2s ease;
+      border-radius: .75rem; padding: .75rem 1.75rem; font-weight: 700; color: var(--gray-700);
+      background-color: #fff; border: 1px solid var(--gray-400); transition: all var(--transition-base);
     }
-
-    .btn-premium-cancel:hover {
-      background-color: #f8fafc;
-      border-color: #94a3b8;
-    }
-
+    .btn-premium-cancel:hover { background-color: var(--gray-50); border-color: var(--gray-500); color: var(--gray-700); }
     .btn-confirm-delete {
-      border-radius: 0.75rem;
-      padding: 0.75rem 1.75rem;
-      font-weight: 600;
-      background: #dc2626;
-      border-color: #dc2626;
-      color: #ffffff;
-      transition: all 0.2s ease;
+      border-radius: .75rem; padding: .75rem 1.75rem; font-weight: 700; background: var(--color-danger-600);
+      border-color: var(--color-danger-600); color: #fff; transition: all var(--transition-base);
     }
-
-    .btn-confirm-delete:hover {
-      background: #b91c1c;
-      border-color: #b91c1c;
-      transform: translateY(-1px);
-    }
-
+    .btn-confirm-delete:hover { background: var(--color-danger-700); border-color: var(--color-danger-700); color: #fff; transform: translateY(-1px); }
     .btn-cancel-delete {
-      border-radius: 0.75rem;
-      padding: 0.75rem 1.75rem;
-      font-weight: 600;
-      color: #475569;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      transition: all 0.2s ease;
+      border-radius: .75rem; padding: .75rem 1.75rem; font-weight: 700; color: var(--gray-700);
+      background: #fff; border: 1px solid var(--gray-400); transition: all var(--transition-base);
     }
+    .btn-cancel-delete:hover { background: var(--gray-50); border-color: var(--gray-500); color: var(--gray-700); }
 
-    .btn-cancel-delete:hover {
-      background: #f8fafc;
-      border-color: #94a3b8;
-    }
+    .form-switch-premium { padding-left: 3rem; }
+    .form-switch-premium .form-check-input { width: 3rem; height: 1.5rem; margin-left: -3rem; cursor: pointer; }
 
-    .auth-page {
-      min-height: calc(100vh - 96px);
-      display: flex;
-      align-items: center;
-      padding: 3rem 0;
-    }
-
-    .auth-card {
-      border: none;
-      border-radius: 1.5rem;
-      box-shadow: 0 28px 70px rgba(15, 23, 42, 0.1);
-      overflow: hidden;
-    }
-
+    /* ── Auth (login / recuperar contraseña / 2FA) ───────────── */
+    .auth-page { min-height: calc(100vh - 96px); display: flex; align-items: center; padding: 3rem 0; }
+    .auth-card { border: none; border-radius: 1.5rem; box-shadow: var(--shadow-xl); overflow: hidden; }
     .auth-card .card-header {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-      color: #ffffff;
-      padding: 2rem 2rem 1.5rem;
+      background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%);
+      color: #fff; padding: 2rem 2rem 1.5rem;
     }
-
-    .auth-card .card-header h4 {
-      margin: 0;
-      letter-spacing: 0.02em;
-      font-weight: 700;
-    }
-
-    .auth-card .card-body {
-      padding: 2rem;
-    }
-
+    .auth-card .card-header h4 { margin: 0; letter-spacing: .02em; font-weight: 800; color: #fff; }
+    .auth-card .card-body { padding: 2rem; }
     .auth-side-panel {
-      background: linear-gradient(180deg, rgba(37, 99, 235, 0.12), rgba(37, 99, 235, 0.04));
-      padding: 2.5rem 2rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 1rem;
+      background: linear-gradient(180deg, rgba(37, 99, 235, .12), rgba(37, 99, 235, .04));
+      padding: 2.5rem 2rem; display: flex; flex-direction: column; justify-content: center; gap: 1rem;
     }
-
-    .auth-side-panel strong {
-      color: #1d4ed8;
-    }
-
-    .auth-form-group .form-control {
-      border-radius: 0.85rem;
-      padding: 1rem 0.95rem;
-      min-height: 3.4rem;
-      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
-    }
-
-    .auth-form-group label {
-      font-weight: 600;
-      color: #334155;
-    }
-
-    .auth-footer-text {
-      color: #64748b;
-    }
-
-    .auth-action-link {
-      font-weight: 600;
-      color: #2563eb;
-      text-decoration: none;
-    }
-
-    .auth-action-link:hover {
-      color: #1d4ed8;
-      text-decoration: underline;
-    }
-
+    .auth-side-panel strong { color: var(--color-primary-600); }
+    .auth-form-group .form-control { border-radius: .85rem; padding: 1rem .95rem; min-height: 3.4rem; box-shadow: inset 0 1px 2px rgba(15, 23, 42, .06); }
+    .auth-form-group label { font-weight: 600; color: var(--gray-800); }
+    .auth-footer-text { color: var(--gray-600); }
+    .auth-action-link { font-weight: 700; color: var(--color-primary-500); text-decoration: none; }
+    .auth-action-link:hover { color: var(--color-primary-600); text-decoration: underline; }
     .auth-hero-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 16px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(37, 99, 235, 0.15);
-      color: #2563eb;
-      font-size: 1.35rem;
+      width: 56px; height: 56px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(37, 99, 235, .15); color: var(--color-primary-500); font-size: 1.35rem;
     }
-
     .delete-icon-circle {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      background: rgba(220, 38, 38, 0.12);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      color: #dc2626;
-      border: 2px solid rgba(220, 38, 38, 0.25);
+      width: 72px; height: 72px; border-radius: 50%; background: rgba(220, 38, 38, .12);
+      display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--color-danger-600);
+      border: 2px solid rgba(220, 38, 38, .25);
     }
-
-    .alert-info-detail {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      border-radius: 0.75rem;
-      color: #7f1d1d;
-    }
+    .alert-info-detail { background: var(--color-danger-50); border: 1px solid var(--color-danger-200); border-radius: .75rem; color: var(--color-danger-800); }
   </style>
 </head>
 
 <body>
   <!-- Barra de navegación -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+  <nav class="navbar navbar-expand-lg navbar-dark app-navbar">
     <div class="container">
-      <a class="navbar-brand" href="{% url 'billing:home' %}"><i class="bi bi-shop-window-fill me-2"></i>TecnoStock</a>
+      <a class="navbar-brand" href="{% url 'billing:home' %}">
+        <span class="brand-icon"><i class="bi bi-shop-window-fill"></i></span>
+        TecnoStock
+      </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -252,31 +495,31 @@
           <!-- COMPRAS: Analista de Compras y Administrador, cada enlace según su permiso real -->
           {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
           {% if perms.billing.view_brand %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'billing:brand_list' %}">Marcas</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'billing:brand_list' %}"><i class="bi bi-tags-fill me-1"></i>Marcas</a></li>
           {% endif %}
           {% if perms.billing.view_productgroup %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'billing:productgroup_list' %}">Grupos</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'billing:productgroup_list' %}"><i class="bi bi-collection-fill me-1"></i>Grupos</a></li>
           {% endif %}
           {% if perms.billing.view_supplier %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'billing:supplier_list' %}">Proveedores</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'billing:supplier_list' %}"><i class="bi bi-truck me-1"></i>Proveedores</a></li>
           {% endif %}
           {% if perms.billing.view_product %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'billing:product_list' %}">Productos</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'billing:product_list' %}"><i class="bi bi-box-seam-fill me-1"></i>Productos</a></li>
           {% endif %}
           {% if perms.purchasing.view_purchase %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'purchasing:purchase_list' %}">Compras</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'pagos:compra_pendiente_list' %}">Pagos</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'purchasing:purchase_list' %}"><i class="bi bi-cart-fill me-1"></i>Compras</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'pagos:compra_pendiente_list' %}"><i class="bi bi-credit-card-fill me-1"></i>Pagos</a></li>
           {% endif %}
           {% endif %}
 
           <!-- VENTAS: Vendedor y Administrador, cada enlace según su permiso real -->
           {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
           {% if perms.billing.view_customer %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'billing:customer_list' %}">Clientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'billing:customer_list' %}"><i class="bi bi-person-vcard-fill me-1"></i>Clientes</a></li>
           {% endif %}
           {% if perms.billing.view_invoice %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'billing:invoice_list' %}">Facturas</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'cobros:factura_pendiente_list' %}">Cobros</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'billing:invoice_list' %}"><i class="bi bi-receipt me-1"></i>Facturas</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'cobros:factura_pendiente_list' %}"><i class="bi bi-cash-coin me-1"></i>Cobros</a></li>
           {% endif %}
           {% endif %}
 
@@ -284,19 +527,19 @@
           {% if user|has_group:'Administrador' and perms.auth %}
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button"
-              aria-expanded="false">Seguridad</a>
+              aria-expanded="false"><i class="bi bi-shield-lock-fill me-1"></i>Seguridad</a>
             <ul class="dropdown-menu">
               {% if perms.auth.view_user %}
-              <li><a class="dropdown-item" href="{% url 'security:user_list' %}">Usuarios</a></li>
+              <li><a class="dropdown-item" href="{% url 'security:user_list' %}"><i class="bi bi-people-fill me-2"></i>Usuarios</a></li>
               {% endif %}
               {% if perms.auth.add_user %}
-              <li><a class="dropdown-item" href="{% url 'security:user_create' %}">Crear usuario</a></li>
+              <li><a class="dropdown-item" href="{% url 'security:user_create' %}"><i class="bi bi-person-plus-fill me-2"></i>Crear usuario</a></li>
               {% endif %}
               {% if perms.auth.view_group %}
-              <li><a class="dropdown-item" href="{% url 'security:group_list' %}">Roles</a></li>
+              <li><a class="dropdown-item" href="{% url 'security:group_list' %}"><i class="bi bi-shield-lock-fill me-2"></i>Roles</a></li>
               {% endif %}
               {% if perms.auth.view_permission %}
-              <li><a class="dropdown-item" href="{% url 'security:permission_list' %}">Permisos</a></li>
+              <li><a class="dropdown-item" href="{% url 'security:permission_list' %}"><i class="bi bi-key-fill me-2"></i>Permisos</a></li>
               {% endif %}
             </ul>
           </li>
@@ -304,15 +547,25 @@
 
           {% endif %}
         </ul>
-        <ul class="navbar-nav ms-auto align-items-center">
+        <ul class="navbar-nav ms-auto align-items-center gap-2">
           {% if user.is_authenticated %}
           <li class="nav-item">
-            <span class="nav-link text-light pe-0">{{ user.username }}</span>
+            <div class="user-chip">
+              <span class="avatar-circle">{{ user.username|slice:":1"|upper }}</span>
+              <span class="user-meta">
+                <span class="user-name">{{ user.username }}</span>
+                {% with primary_role=user.groups.first %}
+                {% if primary_role %}<span class="user-role">{{ primary_role.name }}</span>{% endif %}
+                {% endwith %}
+              </span>
+            </div>
           </li>
           <li class="nav-item">
-            <form method="post" action="{% url 'security:logout' %}" class="d-flex align-items-center ms-2">
+            <form method="post" action="{% url 'security:logout' %}" class="d-flex align-items-center">
               {% csrf_token %}
-              <button type="submit" class="btn btn-outline-light btn-sm btn-logout">Cerrar sesión</button>
+              <button type="submit" class="btn btn-sm btn-logout rounded-pill px-3">
+                <i class="bi bi-box-arrow-right me-1"></i>Salir
+              </button>
             </form>
           </li>
           {% else %}
@@ -323,7 +576,7 @@
     </div>
   </nav>
   <!-- Contenido principal -->
-  <div class="container mt-4">
+  <div class="container mt-4 mb-5">
     {% if messages %}
     {% for m in messages %}
     <div class="alert alert-{{ m.tags }} alert-dismissible fade show">

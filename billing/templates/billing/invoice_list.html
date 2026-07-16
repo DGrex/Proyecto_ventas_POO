@@ -3,53 +3,17 @@
 {% block title %}Facturas{% endblock %}
 
 {% block content %}
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f6f8fa; }
-  .page-header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 16px; padding: 24px 28px; color: #fff; }
-  .page-header h1 { font-weight: 800; font-size: 1.5rem; margin: 0; letter-spacing: -.5px; }
-  .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .88rem; }
-  .glass-card { background: #fff; border: 1px solid #eef1f6; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.03); }
-  .filter-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6b7280; margin-bottom: 5px; }
-  .form-control-sm, .form-select-sm { border-radius: 8px; border: 1px solid #dce2ea; font-size: .84rem; padding: 6px 10px; }
-  .form-control-sm:focus, .form-select-sm:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
-  .btn-pdf   { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; transition: all .2s; }
-  .btn-pdf:hover   { background: #dbeafe; color: #1e40af; }
-  .btn-excel { background: #ecfdf5; color: #047857; border: 1px solid #86efac; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; transition: all .2s; }
-  .btn-excel:hover { background: #d1fae5; color: #065f46; }
-  .products-table { background: #fff; border: 1px solid #eef1f6; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.03); }
-  .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .products-table table { min-width: 1100px; }
-  .products-table thead th { background: #f8fafc; border-bottom: 2px solid #eef1f6; color: #6c757d; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; padding: 13px 16px; white-space: nowrap; }
-  .products-table tbody td { padding: 13px 16px; vertical-align: middle; border-bottom: 1px solid #f2f4f7; font-size: .875rem; }
-  .products-table tbody tr:last-child td { border-bottom: none; }
-  .products-table tbody tr:hover { background: #fafbfc; }
-  .badge-active   { background: #d1fae5; color: #065f46; font-size: .7rem; font-weight: 700; border-radius: 50px; padding: 3px 10px; }
-  .badge-inactive { background: #fee2e2; color: #991b1b; font-size: .7rem; font-weight: 700; border-radius: 50px; padding: 3px 10px; }
-  .badge-pending  { background: #fef3c7; color: #92400e; font-size: .7rem; font-weight: 700; border-radius: 50px; padding: 3px 10px; }
-  .btn-view   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-block; }
-  .btn-view:hover   { background: #dbeafe; }
-  .btn-edit   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-block; }
-  .btn-edit:hover   { background: #dbeafe; }
-  .btn-del     { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; display: inline-block; }
-  .btn-del:hover     { background: #fecaca; }
-  .page-link { color: #2563eb; border-radius: 8px !important; margin: 0 2px; border-color: #eef1f6; font-size: .85rem; }
-  .page-item.active .page-link { background: #2563eb; border-color: #2563eb; color: #fff; }
-</style>
 
-<div class="container-fluid py-4">
-
-  <div class="page-header d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1><i class="fas fa-list me-2"></i>Facturas</h1>
-      <p>Gestión de facturas</p>
-    </div>
-    {% if perms.billing.add_invoice %}
-    <a href="{% url 'billing:invoice_create' %}" class="btn btn-light fw-bold rounded-pill px-4 shadow-sm text-primary">
-      <i class="fas fa-plus me-1"></i> Nueva Factura
-    </a>
-    {% endif %}
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1><span class="header-icon"><i class="bi bi-receipt"></i></span>Facturas</h1>
+    <p>Gestión de facturas</p>
   </div>
+  {% if perms.billing.add_invoice %}
+  <a href="{% url 'billing:invoice_create' %}" class="btn btn-light fw-bold rounded-pill px-4 shadow-sm text-primary">
+    <i class="bi bi-plus-lg me-1"></i> Nueva Factura
+  </a>
+  {% endif %}
 </div>
 
 {# ── PANEL DE FILTROS ─────────────────────────────────────────── #}
@@ -142,16 +106,16 @@
                    placeholder="9999.99"
                    value="{{ filter.total_max|default_if_none:'' }}">
           </div>
-          
+
         <!-- Columnas a Mostrar / Exportar -->
         <div class="col-md-3">
-          <div class="filter-label"><i class="fas fa-columns me-1"></i>Columnas (Mostrar/Exportar)</div>
+          <div class="filter-label"><i class="bi bi-layout-three-columns me-1"></i>Columnas (Mostrar/Exportar)</div>
           <div class="dropdown">
             <button class="form-select form-select-sm text-start d-flex justify-content-between align-items-center" type="button" id="columnSelectDropdown" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="background-image: none; padding-right: 10px;">
               <span id="columnSelectLabel" class="text-truncate" style="max-width: 150px; display: inline-block;">
                 Cargando...
               </span>
-              <i class="fas fa-chevron-down text-muted" style="font-size: 0.7rem;"></i>
+              <i class="bi bi-chevron-down text-muted" style="font-size: 0.7rem;"></i>
             </button>
             <div class="dropdown-menu p-3 shadow border-0" aria-labelledby="columnSelectDropdown" style="min-width: 250px; border-radius: 10px; max-height: 300px; overflow-y: auto; z-index: 1050;">
               <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
@@ -190,12 +154,12 @@
 <div class="d-flex justify-content-end align-items-center gap-2 mb-3">
   {% if perms.security.export_pdf %}
   <a href="?{{ query_string }}&export=pdf" class="btn-pdf">
-    <i class="fas fa-file-pdf"></i> Exportar PDF
+    <i class="bi bi-file-earmark-pdf-fill"></i> Exportar PDF
   </a>
   {% endif %}
   {% if perms.security.export_excel %}
   <a href="?{{ query_string }}&export=excel" class="btn-excel">
-    <i class="fas fa-file-excel"></i> Exportar Excel
+    <i class="bi bi-file-earmark-excel-fill"></i> Exportar Excel
   </a>
   {% endif %}
 </div>
@@ -208,7 +172,7 @@
 
 <div class="products-table">
   <div class="table-responsive">
-  <table class="table mb-0">
+  <table class="table mb-0" style="min-width: 1100px;">
     <thead>
       <tr>
         {% if 'id' in selected_columns %}<th>#</th>{% endif %}
@@ -258,24 +222,24 @@
         <td class="text-center text-nowrap">
           {% if perms.billing.view_invoice %}
           <a href="{% url 'billing:invoice_detail' inv.pk %}" class="btn-view" title="Ver Detalle">
-            <i class="fas fa-eye me-1"></i>Ver
+            <i class="bi bi-eye-fill me-1"></i>Ver
           </a>
           {% endif %}
           {% if perms.billing.change_invoice %}
-          <a href="{% url 'billing:invoice_update' inv.pk %}" class="btn-edit"><i class="fas fa-pencil-alt me-1"></i>Editar</a>
+          <a href="{% url 'billing:invoice_update' inv.pk %}" class="btn-edit"><i class="bi bi-pencil-fill me-1"></i>Editar</a>
           {% endif %}
           {% if perms.billing.delete_invoice %}
-          <a href="{% url 'billing:invoice_delete' inv.pk %}" class="btn-del"><i class="fas fa-trash-alt me-1"></i>Borrar</a>
+          <a href="{% url 'billing:invoice_delete' inv.pk %}" class="btn-del"><i class="bi bi-trash-fill me-1"></i>Borrar</a>
           {% endif %}
           {% if inv.tipo_pago == 'credito' %}
             {% if perms.cobros.view_cobrofactura %}
             <a href="{% url 'cobros:cobro_list' inv.pk %}" class="btn-edit" title="Ver Historial de Cobros">
-              <i class="fas fa-history me-1"></i>Historial
+              <i class="bi bi-clock-history me-1"></i>Historial
             </a>
             {% endif %}
             {% if inv.estado == 'PENDIENTE' and perms.cobros.add_cobrofactura %}
               <a href="{% url 'cobros:cobro_create' inv.pk %}" class="btn-edit" title="Registrar pago">
-                <i class="fas fa-dollar-sign me-1"></i>Cobrar
+                <i class="bi bi-currency-dollar me-1"></i>Cobrar
               </a>
             {% endif %}
           {% endif %}
@@ -283,8 +247,11 @@
       </tr>
       {% empty %}
       <tr>
-        <td colspan="100" class="text-center py-4 text-muted">
-          No se encontraron facturas con los filtros aplicados.
+        <td colspan="100">
+          <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <span>No se encontraron facturas con los filtros aplicados.</span>
+          </div>
         </td>
       </tr>
       {% endfor %}
@@ -295,7 +262,7 @@
 
 {# ── PAGINACIÓN ───────────────────────────────────────────────── #}
 {% if paginator.num_pages > 1 %}
-<nav aria-label="Paginación de facturas">
+<nav aria-label="Paginación de facturas" class="mt-3">
   <ul class="pagination justify-content-center">
     <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
       <a class="page-link" href="?{{ query_string }}&page={{ page_obj.previous_page_number }}">
@@ -318,8 +285,6 @@
 </nav>
 {% endif %}
 
-</div>
-
 <!-- Column selector dynamic label script -->
 <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -333,7 +298,7 @@
       const checkedBoxes = document.querySelectorAll('.col-checkbox:checked');
       const checkedCount = checkedBoxes.length;
       const totalCount = checkboxes.length;
-      
+
       if (checkedCount === totalCount) {
         label.textContent = "Todas";
       } else if (checkedCount === 0) {
