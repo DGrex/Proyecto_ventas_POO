@@ -22,6 +22,8 @@ from shared.notifications import generate_invoice_pdf, send_invoice_email, send_
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.db.models import ProtectedError
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.utils import timezone
+from cobros.models import CobroFactura
 
 # NOTA: se eliminó el auto-registro público (antes SignUpView). La creación
 # de usuarios ahora es exclusiva del Administrador (ver security.UserCreateView).
@@ -230,6 +232,8 @@ class InvoiceCreateView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedi
         if not formset.is_valid():
             return self.form_invalid(form)
 
+        metodo_pago = form.cleaned_data.get('metodo_pago') or 'efectivo'
+
         # 1. Guardamos estrictamente los datos en la Base de Datos
         try:
             with transaction.atomic():
@@ -241,21 +245,32 @@ class InvoiceCreateView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedi
                 formset.instance = self.object
                 formset.save()
 
-                # Recalculamos los totales de la factura
+                # Recalculamos los totales de la factura (redondeados a 2 decimales,
+                # que es lo que exige el modelo CobroFactura al registrar el pago)
                 subtotal = sum(d.subtotal for d in self.object.details.all())
-                self.object.subtotal = subtotal
-                self.object.tax = subtotal * Decimal('0.15') # IVA 15% (Ecuador)
-                self.object.total = self.object.subtotal + self.object.tax
-                
-                if self.object.tipo_pago == 'credito':
-                    self.object.saldo = self.object.total
-                    self.object.estado = 'PENDIENTE'
-                else:
-                    self.object.saldo = 0
-                    self.object.estado = 'PAGADA'
-                
+                self.object.subtotal = subtotal.quantize(Decimal('0.01'))
+                self.object.tax = (subtotal * Decimal('0.15')).quantize(Decimal('0.01')) # IVA 15% (Ecuador)
+                self.object.total = (self.object.subtotal + self.object.tax).quantize(Decimal('0.01'))
+
+                # El saldo arranca igual al total. Si es al contado y el método
+                # elegido no es PayPal, se cancela de inmediato registrando un
+                # CobroFactura (deja rastro real del método usado). Si es PayPal,
+                # queda PENDIENTE hasta que el cliente complete el pago real en
+                # PayPal (ver redirección más abajo).
+                self.object.saldo = self.object.total
+                self.object.estado = 'PENDIENTE'
                 self.object.save()
-                
+
+                if self.object.tipo_pago == 'contado' and metodo_pago != 'paypal':
+                    CobroFactura.objects.create(
+                        factura=self.object,
+                        fecha=timezone.localdate(),
+                        valor=self.object.total,
+                        metodo_pago=metodo_pago,
+                        observacion='Pago registrado al crear la factura (contado).',
+                    )
+                    self.object.refresh_from_db()
+
         except Exception as e:
             # Si algo falla guardando en la BD, mostramos el error y recargamos el formulario
             messages.error(self.request, f"Error al guardar la factura: {e}")
@@ -285,6 +300,10 @@ class InvoiceCreateView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedi
             messages.warning(self.request, f'La factura se creó, pero hubo un problema con las notificaciones: {e_notif}')
 
         # 3. Éxito y redirección final (Siempre debe estar al ras de la función)
+        if self.object.tipo_pago == 'contado' and metodo_pago == 'paypal':
+            messages.info(self.request, f'Factura #{self.object.id} creada. Completa el pago con PayPal para finalizarla.')
+            return redirect('cobros:paypal_iniciar_pago', factura_id=self.object.pk)
+
         messages.success(self.request, f'Factura #{self.object.id} creada correctamente! Total: ${self.object.total}')
         return redirect('billing:invoice_detail_voucher', pk=self.object.pk)
 @method_decorator(audit_action('UPDATE_INVOICE'), name='dispatch')
@@ -345,9 +364,9 @@ class InvoiceUpdateView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedi
                     formset.save()
 
                     subtotal = sum(d.subtotal for d in self.object.details.all())
-                    self.object.subtotal = subtotal
-                    self.object.tax = subtotal * Decimal('0.15')
-                    self.object.total = self.object.subtotal + self.object.tax
+                    self.object.subtotal = subtotal.quantize(Decimal('0.01'))
+                    self.object.tax = (subtotal * Decimal('0.15')).quantize(Decimal('0.01'))
+                    self.object.total = (self.object.subtotal + self.object.tax).quantize(Decimal('0.01'))
                     if self.object.tipo_pago == 'credito':
                         self.object.saldo = self.object.total
                         self.object.estado = 'PENDIENTE'

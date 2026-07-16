@@ -77,6 +77,19 @@
             {% endif %}
           </div>
 
+          {% if not form.instance.pk %}
+          <div class="mb-3" id="metodo-pago-wrapper">
+            <label for="{{ form.metodo_pago.id_for_label }}" class="form-label">Método de Pago</label>
+            {{ form.metodo_pago }}
+            <div class="form-text text-muted small">
+              Si eliges PayPal, al crear la factura se te redirigirá a completar el pago con PayPal.
+            </div>
+            {% if form.metodo_pago.errors %}
+            <div class="invalid-feedback d-block">{{ form.metodo_pago.errors }}</div>
+            {% endif %}
+          </div>
+          {% endif %}
+
           <!-- Líneas de Detalle -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold text-dark mb-0">Detalles de la Factura</h5>
@@ -222,6 +235,17 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    // El método de pago solo aplica a facturas al contado
+    const tipoPagoSelect = document.getElementById('{{ form.tipo_pago.id_for_label }}');
+    const metodoPagoWrapper = document.getElementById('metodo-pago-wrapper');
+    if (tipoPagoSelect && metodoPagoWrapper) {
+      const toggleMetodoPago = () => {
+        metodoPagoWrapper.style.display = tipoPagoSelect.value === 'contado' ? '' : 'none';
+      };
+      tipoPagoSelect.addEventListener('change', toggleMetodoPago);
+      toggleMetodoPago();
+    }
+
     const productsData = JSON.parse(document.getElementById('products-data').textContent);
     const tbody = document.getElementById('details-tbody');
     const emptyRowTemplate = document.getElementById('empty-row');

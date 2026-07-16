@@ -229,7 +229,35 @@ def generate_cobro_receipt_pdf(cobro):
     elements.append(info_table)
     elements.append(Spacer(1, 18))
 
-# en generate_cobro_receipt_pdf
+    # ── Detalle de productos ───────────────────────────
+    elements.append(Paragraph('<b>Productos Comprados:</b>', label_style))
+    elements.append(Spacer(1, 6))
+
+    header = ['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal']
+    rows = [header]
+    for d in factura.details.all():
+        rows.append([
+            d.product.name,
+            str(d.quantity),
+            f'${d.unit_price}',
+            f'${d.subtotal}',
+        ])
+
+    detail_table = Table(rows, colWidths=[220, 80, 80, 80])
+    detail_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#047857')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f9fafb')]),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(detail_table)
+    elements.append(Spacer(1, 18))
+
     resumen_data = [
         ['Total de la Factura:', f'${factura.total:.2f}'],
         ['Valor Abonado (este pago):', f'${cobro.valor:.2f}'],

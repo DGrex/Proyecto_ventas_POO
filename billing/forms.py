@@ -1,6 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 from .models import Brand, Product, ProductGroup, Supplier, Invoice, InvoiceDetail, Customer
+from cobros.models import CobroFactura
 
 # NOTA: el auto-registro público (antes SignUpForm) fue eliminado.
 # La creación de usuarios ahora es exclusiva del Administrador,
@@ -54,6 +55,19 @@ class SupplierForm(forms.ModelForm):
         
 class InvoiceForm(forms.ModelForm):
     """Formulario premium para la cabecera de factura."""
+
+    # No es un campo del modelo Invoice: solo se usa al CREAR una factura al
+    # contado, para saber con qué medio se cobra (incluye PayPal, que dispara
+    # el flujo real de cobros.paypal_iniciar_pago en vez de darse por pagada
+    # a ciegas). Ver InvoiceCreateView.form_valid.
+    metodo_pago = forms.ChoiceField(
+        choices=CobroFactura.METODO_PAGO,
+        required=False,
+        initial='efectivo',
+        label='Método de Pago',
+        widget=forms.Select(attrs={'class': 'form-select form-select-premium'}),
+    )
+
     class Meta:
         model = Invoice
         fields = ['customer', 'tipo_pago']
