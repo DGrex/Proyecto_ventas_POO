@@ -13,6 +13,49 @@ from reportlab.platypus import (
 )
 
 
+# ══════════════════════════════════════════════════════════════════
+# WHATSAPP (Green API) - envío directo desde el número del negocio,
+# sin que el cliente deba registrarse ni pedir códigos.
+# ══════════════════════════════════════════════════════════════════
+
+def _to_whatsapp_chat_id(phone):
+    """Convierte un teléfono local (ej: 0991234567) al chatId de Green API
+    (ej: 593991234567@c.us), asumiendo el código de país por defecto."""
+    digits = ''.join(ch for ch in phone if ch.isdigit())
+    if not digits:
+        return None
+    country_code = settings.WHATSAPP_DEFAULT_COUNTRY_CODE
+    if digits.startswith('0'):
+        digits = country_code + digits[1:]
+    elif not digits.startswith(country_code):
+        digits = country_code + digits
+    return f'{digits}@c.us'
+
+
+def _send_whatsapp_message(phone, message):
+    """Envía un mensaje de WhatsApp vía Green API usando la instancia del negocio."""
+    if not phone:
+        return False, 'El cliente no tiene teléfono registrado.'
+    if not settings.GREENAPI_ID_INSTANCE or not settings.GREENAPI_API_TOKEN:
+        return False, 'WhatsApp no está configurado (falta GREENAPI_ID_INSTANCE/GREENAPI_API_TOKEN).'
+
+    chat_id = _to_whatsapp_chat_id(phone)
+    if not chat_id:
+        return False, 'El teléfono del cliente no es válido.'
+
+    url = (
+        f'https://api.green-api.com/waInstance{settings.GREENAPI_ID_INSTANCE}'
+        f'/sendMessage/{settings.GREENAPI_API_TOKEN}'
+    )
+    try:
+        response = requests.post(url, json={'chatId': chat_id, 'message': message}, timeout=10)
+        if response.status_code == 200:
+            return True, 'Mensaje de WhatsApp enviado correctamente.'
+        return False, f'Green API respondió con estado {response.status_code}: {response.text}'
+    except Exception as e:
+        return False, f'Error al enviar WhatsApp: {e}'
+
+
 def generate_invoice_pdf(invoice):
     """
     Genera el comprobante de una factura en PDF y devuelve los bytes.
@@ -140,18 +183,8 @@ def send_invoice_email(invoice, pdf_bytes):
         return False, f'Error al enviar correo: {e}'
 
 def send_invoice_whatsapp(invoice):
-    """
-    Envía un resumen de la factura por WhatsApp usando CallMeBot.
-    Usa la API key propia del cliente (cada cliente se suscribe con su propio número).
-    """
+    """Envía un resumen de la factura por WhatsApp desde el número del negocio (Green API)."""
     customer = invoice.customer
-
-    if not customer.phone:
-        return False, 'El cliente no tiene teléfono registrado.'
-    if not customer.whatsapp_apikey:
-        return False, 'El cliente no tiene una API key de WhatsApp configurada (no está suscrito a CallMeBot).'
-
-    phone = customer.phone.replace(' ', '').replace('-', '')
     message = (
         f'🧾 *TecnoStock* - Factura #{invoice.id}\n'
         f'Cliente: {customer.full_name}\n'
@@ -159,21 +192,7 @@ def send_invoice_whatsapp(invoice):
         f'Estado: {invoice.get_estado_display()}\n'
         f'¡Gracias por tu compra!'
     )
-
-    url = 'https://api.callmebot.com/whatsapp.php'
-    params = {
-        'phone': phone,
-        'text': message,
-        'apikey': customer.whatsapp_apikey,
-    }
-
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        if response.status_code == 200:
-            return True, 'Mensaje de WhatsApp enviado correctamente.'
-        return False, f'CallMeBot respondió con estado {response.status_code}: {response.text}'
-    except Exception as e:
-        return False, f'Error al enviar WhatsApp: {e}'
+    return _send_whatsapp_message(customer.phone, message)
 
 # ══════════════════════════════════════════════════════════════════
 # COMPROBANTE DE ABONO (COBROS - pagos que hace un cliente)
@@ -321,16 +340,9 @@ def send_cobro_receipt_email(cobro, pdf_bytes):
 
 
 def send_cobro_whatsapp(cobro):
-    """Envía confirmación de abono por WhatsApp usando la API key propia del cliente."""
+    """Envía confirmación de abono por WhatsApp desde el número del negocio (Green API)."""
     factura = cobro.factura
     customer = factura.customer
-
-    if not customer.phone:
-        return False, 'El cliente no tiene teléfono registrado.'
-    if not customer.whatsapp_apikey:
-        return False, 'El cliente no tiene una API key de WhatsApp configurada.'
-
-    phone = customer.phone.replace(' ', '').replace('-', '')
     message = (
         f'💰 *TecnoStock* - Abono Registrado\n'
         f'Factura #{factura.id}\n'
@@ -338,16 +350,7 @@ def send_cobro_whatsapp(cobro):
         f'Saldo pendiente: ${factura.saldo}\n'
         f'¡Gracias por tu pago!'
     )
-    url = 'https://api.callmebot.com/whatsapp.php'
-    params = {'phone': phone, 'text': message, 'apikey': customer.whatsapp_apikey}
-
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        if response.status_code == 200:
-            return True, 'Mensaje de WhatsApp enviado correctamente.'
-        return False, f'CallMeBot respondió con estado {response.status_code}: {response.text}'
-    except Exception as e:
-        return False, f'Error al enviar WhatsApp: {e}'
+    return _send_whatsapp_message(customer.phone, message)
 
 
 # ══════════════════════════════════════════════════════════════════

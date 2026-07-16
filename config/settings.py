@@ -143,8 +143,13 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
-# ── Configuración de WhatsApp (CallMeBot) ─────────────────────────
-#CALLMEBOT_API_KEY = os.environ.get('CALLMEBOT_API_KEY', '')
+# ── Configuración de WhatsApp (Green API) ─────────────────────────
+# Vincula tu propio número de WhatsApp una sola vez (QR) en green-api.com;
+# no requiere que cada cliente pida un código.
+GREENAPI_ID_INSTANCE = os.environ.get('GREENAPI_ID_INSTANCE', '')
+GREENAPI_API_TOKEN = os.environ.get('GREENAPI_API_TOKEN', '')
+# Código de país por defecto para completar números locales (Ecuador = 593).
+WHATSAPP_DEFAULT_COUNTRY_CODE = os.environ.get('WHATSAPP_DEFAULT_COUNTRY_CODE', '593')
 
 # ── Configuración de PayPal ────────────────────────────────────────
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')

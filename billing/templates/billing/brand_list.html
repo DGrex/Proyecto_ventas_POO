@@ -172,7 +172,7 @@
 <nav aria-label="Paginación de marcas" class="mt-3">
   <ul class="pagination justify-content-center">
     <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-      <a class="page-link" href="?{{ query_string }}&page={{ page_obj.previous_page_number }}">
+      <a class="page-link" href="?{{ query_string }}&page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}">
         &laquo; Anterior
       </a>
     </li>
@@ -184,7 +184,7 @@
       {% endif %}
     {% endfor %}
     <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-      <a class="page-link" href="?{{ query_string }}&page={{ page_obj.next_page_number }}">
+      <a class="page-link" href="?{{ query_string }}&page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}">
         Siguiente &raquo;
       </a>
     </li>

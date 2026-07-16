@@ -188,27 +188,6 @@
                     {% for error in form.phone.errors %}{{ error }}{% endfor %}
                   </div>
                   {% endif %}
-                  <!-- WhatsApp API Key -->
-                  <div class="col-md-6">
-                    <label for="{{ form.whatsapp_apikey.id_for_label }}" class="form-label form-label-premium">
-                      {{ form.whatsapp_apikey.label }}
-                    </label>
-                    <div class="input-group">
-                      <span class="input-group-text bg-white border-2 border-end-0"
-                        style="border-radius: 10px 0 0 10px; border-color: #e2e8f0; color: #64748b;">
-                        <i class="bi bi-whatsapp"></i>
-                      </span>
-                      {{ form.whatsapp_apikey }}
-                    </div>
-                    {% if form.whatsapp_apikey.help_text %}
-                    <div class="form-text text-muted small">{{ form.whatsapp_apikey.help_text }}</div>
-                    {% endif %}
-                    {% if form.whatsapp_apikey.errors %}
-                    <div class="invalid-feedback d-block">
-                      {% for error in form.whatsapp_apikey.errors %}{{ error }}{% endfor %}
-                    </div>
-                    {% endif %}
-                  </div>
                 </div>
 
 

@@ -88,11 +88,6 @@ class Customer(models.Model):
     email = models.EmailField(blank=True, null=True, verbose_name='Correo Electronico')
     phone = models.CharField(max_length=20, blank=True, null=True, verbose_name='Teléfono')
     address = models.TextField(blank=True, null=True, verbose_name='Dirección')
-    whatsapp_apikey = models.CharField(
-        max_length=20, blank=True, null=True,
-        verbose_name='WhatsApp API Key (CallMeBot)',
-        help_text='Solo necesaria si el cliente se suscribió a CallMeBot para recibir notificaciones.'
-    )
     is_active = models.BooleanField(default=True, verbose_name='Activo')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Creado el')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Actualizado el')
