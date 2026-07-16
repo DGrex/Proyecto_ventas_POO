@@ -249,34 +249,55 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {% if user.is_authenticated %}
 
-          <!-- COMPRAS: Analista de Compras y Administrador -->
+          <!-- COMPRAS: Analista de Compras y Administrador, cada enlace según su permiso real -->
           {% if user|has_group:'Analista de Compras' or user|has_group:'Administrador' %}
+          {% if perms.billing.view_brand %}
           <li class="nav-item"><a class="nav-link" href="{% url 'billing:brand_list' %}">Marcas</a></li>
+          {% endif %}
+          {% if perms.billing.view_productgroup %}
           <li class="nav-item"><a class="nav-link" href="{% url 'billing:productgroup_list' %}">Grupos</a></li>
+          {% endif %}
+          {% if perms.billing.view_supplier %}
           <li class="nav-item"><a class="nav-link" href="{% url 'billing:supplier_list' %}">Proveedores</a></li>
+          {% endif %}
+          {% if perms.billing.view_product %}
           <li class="nav-item"><a class="nav-link" href="{% url 'billing:product_list' %}">Productos</a></li>
-          <!-- Sección recuperada y unificada -->
+          {% endif %}
+          {% if perms.purchasing.view_purchase %}
           <li class="nav-item"><a class="nav-link" href="{% url 'purchasing:purchase_list' %}">Compras</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'pagos:compra_pendiente_list' %}">Pagos a Proveedores</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'pagos:compra_pendiente_list' %}">Pagos</a></li>
+          {% endif %}
           {% endif %}
 
-          <!-- VENTAS: Vendedor y Administrador -->
+          <!-- VENTAS: Vendedor y Administrador, cada enlace según su permiso real -->
           {% if user|has_group:'Vendedor' or user|has_group:'Administrador' %}
+          {% if perms.billing.view_customer %}
           <li class="nav-item"><a class="nav-link" href="{% url 'billing:customer_list' %}">Clientes</a></li>
+          {% endif %}
+          {% if perms.billing.view_invoice %}
           <li class="nav-item"><a class="nav-link" href="{% url 'billing:invoice_list' %}">Facturas</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'cobros:factura_pendiente_list' %}">Cobros</a></li>
           {% endif %}
+          {% endif %}
 
-          <!-- SEGURIDAD: solo Administrador -->
-          {% if user|has_group:'Administrador' %}
+          <!-- SEGURIDAD: solo Administrador, cada enlace según su permiso real -->
+          {% if user|has_group:'Administrador' and perms.auth %}
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button"
               aria-expanded="false">Seguridad</a>
             <ul class="dropdown-menu">
+              {% if perms.auth.view_user %}
               <li><a class="dropdown-item" href="{% url 'security:user_list' %}">Usuarios</a></li>
+              {% endif %}
+              {% if perms.auth.add_user %}
               <li><a class="dropdown-item" href="{% url 'security:user_create' %}">Crear usuario</a></li>
+              {% endif %}
+              {% if perms.auth.view_group %}
               <li><a class="dropdown-item" href="{% url 'security:group_list' %}">Roles</a></li>
+              {% endif %}
+              {% if perms.auth.view_permission %}
               <li><a class="dropdown-item" href="{% url 'security:permission_list' %}">Permisos</a></li>
+              {% endif %}
             </ul>
           </li>
           {% endif %}

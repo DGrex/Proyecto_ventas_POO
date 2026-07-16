@@ -13,6 +13,7 @@ ROLES = {
         'view_invoice', 'add_invoice', 'change_invoice',
         'view_invoicedetail', 'add_invoicedetail', 'change_invoicedetail',
         'view_product',
+        'export_pdf', 'export_excel',
     ],
 
     # El Analista de Compras gestiona el catálogo completo
@@ -21,6 +22,7 @@ ROLES = {
         'view_productgroup', 'add_productgroup', 'change_productgroup', 'delete_productgroup',
         'view_supplier', 'add_supplier', 'change_supplier', 'delete_supplier',
         'view_product', 'add_product', 'change_product', 'delete_product',
+        'export_pdf', 'export_excel',
     ],
 }
 
@@ -43,4 +45,4 @@ class Command(BaseCommand):
             status = 'creado' if created else 'actualizado'
             self.stdout.write(self.style.SUCCESS(
                 f'Rol "{role_name}" {status} con {perms.count()} permisos'
-            ))-
+            ))

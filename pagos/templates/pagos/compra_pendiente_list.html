@@ -22,6 +22,10 @@
   .btn-view:hover { background: #dbeafe; }
   .btn-pay { background: #ecfdf5; color: #047857; border: 1px solid #86efac; border-radius: 7px; padding: 4px 10px; font-size: .78rem; font-weight: 600; text-decoration: none; display: inline-block; }
   .btn-pay:hover { background: #d1fae5; }
+  .btn-pdf   { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; transition: all .2s; }
+  .btn-pdf:hover   { background: #dbeafe; color: #1e40af; }
+  .btn-excel { background: #ecfdf5; color: #047857; border: 1px solid #86efac; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; transition: all .2s; }
+  .btn-excel:hover { background: #d1fae5; color: #065f46; }
   .page-link { color: #2563eb; border-radius: 8px !important; margin: 0 2px; border-color: #eef1f6; font-size: .85rem; }
   .page-item.active .page-link { background: #2563eb; border-color: #2563eb; color: #fff; }
 </style>
@@ -61,6 +65,19 @@
       </a>
     </div>
   </form>
+</div>
+
+<div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+  {% if perms.security.export_pdf %}
+  <a href="?{{ query_string }}&export=pdf" class="btn-pdf">
+    <i class="fas fa-file-pdf"></i> Exportar PDF
+  </a>
+  {% endif %}
+  {% if perms.security.export_excel %}
+  <a href="?{{ query_string }}&export=excel" class="btn-excel">
+    <i class="fas fa-file-excel"></i> Exportar Excel
+  </a>
+  {% endif %}
 </div>
 
 <p class="text-muted small">

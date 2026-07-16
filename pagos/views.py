@@ -6,10 +6,22 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from purchasing.models import Purchase
+from purchasing.views import PurchaseExportHelper
 from shared.decorators import audit_action, group_required
+from shared.mixins import ExportMixin, check_export_permission
 from shared.notifications import generate_pago_receipt_pdf, send_pago_receipt_email
 from .models import PagoCompra
 from .forms import PagoCompraForm
+
+
+class PagoCompraExportHelper(ExportMixin):
+    model = PagoCompra
+    export_filename = 'historial_pagos'
+    export_fields = [
+        ('fecha', 'Fecha de Pago'),
+        ('valor', 'Valor Abonado'),
+        ('observacion', 'Observación'),
+    ]
 
 
 @login_required
@@ -28,14 +40,33 @@ def compra_pendiente_list(request):
     if doc_number:
         compras = compras.filter(document_number__icontains=doc_number)
 
+    export_format = request.GET.get('export')
+    if export_format in ['excel', 'pdf']:
+        redirect_response = check_export_permission(request, export_format)
+        if redirect_response:
+            return redirect_response
+        helper = PurchaseExportHelper()
+        helper.request = request
+        fields = helper.get_export_fields()
+        filename = helper.get_export_filename()
+        if export_format == 'excel':
+            return helper.export_to_excel(compras, fields, filename)
+        return helper.export_to_pdf(compras, fields, filename)
+
     paginator = Paginator(compras, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
+
+    params = request.GET.copy()
+    params.pop('page', None)
+    query_string = params.urlencode()
 
     return render(request, 'pagos/compra_pendiente_list.html', {
         'page_obj': page_obj,
         'paginator': paginator,
         'compras': page_obj,
         'estado_filter': estado,
+        'query_string': query_string,
+        'has_active_filters': any([estado != 'PENDIENTE', doc_number]),
     })
 
 
@@ -87,14 +118,42 @@ def pago_list(request, compra_id):
     compra = get_object_or_404(Purchase, pk=compra_id)
     pagos = PagoCompra.objects.filter(compra=compra)
 
+    p = request.GET
+    fecha_min = p.get('fecha_min')
+    fecha_max = p.get('fecha_max')
+    if fecha_min:
+        pagos = pagos.filter(fecha__gte=fecha_min)
+    if fecha_max:
+        pagos = pagos.filter(fecha__lte=fecha_max)
+
+    export_format = p.get('export')
+    if export_format in ['excel', 'pdf']:
+        redirect_response = check_export_permission(request, export_format)
+        if redirect_response:
+            return redirect_response
+        helper = PagoCompraExportHelper()
+        helper.request = request
+        fields = helper.get_export_fields()
+        filename = helper.get_export_filename()
+        if export_format == 'excel':
+            return helper.export_to_excel(pagos, fields, filename)
+        return helper.export_to_pdf(pagos, fields, filename)
+
     paginator = Paginator(pagos, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
+
+    params = request.GET.copy()
+    params.pop('page', None)
+    query_string = params.urlencode()
 
     return render(request, 'pagos/pago_list.html', {
         'compra': compra,
         'page_obj': page_obj,
         'paginator': paginator,
         'pagos': page_obj,
+        'filter': p,
+        'query_string': query_string,
+        'has_active_filters': any([fecha_min, fecha_max]),
     })
 
 

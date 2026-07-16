@@ -7,6 +7,13 @@
   .page-header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 16px; padding: 24px 28px; color: #fff; }
   .page-header h1 { font-weight: 800; font-size: 1.5rem; margin: 0; letter-spacing: -.5px; }
   .page-header p  { margin: 4px 0 0; opacity: .85; font-size: .88rem; }
+  .glass-card { background: #fff; border: 1px solid #eef1f6; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.03); }
+  .filter-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6b7280; margin-bottom: 5px; }
+  .form-control-sm, .form-select-sm { border-radius: 8px; border: 1px solid #dce2ea; font-size: .84rem; padding: 6px 10px; }
+  .btn-pdf   { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; transition: all .2s; }
+  .btn-pdf:hover   { background: #dbeafe; color: #1e40af; }
+  .btn-excel { background: #ecfdf5; color: #047857; border: 1px solid #86efac; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; transition: all .2s; }
+  .btn-excel:hover { background: #d1fae5; color: #065f46; }
   .products-table { background: #fff; border: 1px solid #eef1f6; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.03); }
   .table-responsive { overflow-x: auto; }
   .products-table table { min-width: 900px; }
@@ -36,6 +43,62 @@
     </a>
     {% endif %}
   </div>
+</div>
+
+{# ── PANEL DE FILTROS ─────────────────────────────────────────── #}
+<div class="glass-card p-4 mb-4">
+  <form method="get" class="row g-3 align-items-end">
+    <div class="col-md-3">
+      <label for="f-username" class="filter-label">Usuario</label>
+      <input type="text" id="f-username" name="username" class="form-control form-control-sm"
+             placeholder="Buscar por usuario…" value="{{ filter.username|default_if_none:'' }}">
+    </div>
+    <div class="col-md-3">
+      <label for="f-email" class="filter-label">Correo</label>
+      <input type="text" id="f-email" name="email" class="form-control form-control-sm"
+             placeholder="Buscar por correo…" value="{{ filter.email|default_if_none:'' }}">
+    </div>
+    <div class="col-md-2">
+      <label for="f-group" class="filter-label">Rol</label>
+      <select id="f-group" name="group" class="form-select form-select-sm">
+        <option value="">— Todos —</option>
+        {% for g in groups_catalog %}
+        <option value="{{ g.id }}" {% if filter.group == g.id|stringformat:"s" %}selected{% endif %}>{{ g.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label for="f-active" class="filter-label">Estado</label>
+      <select id="f-active" name="is_active" class="form-select form-select-sm">
+        <option value=""      {% if filter.is_active == ''      %}selected{% endif %}>— Todos —</option>
+        <option value="true"  {% if filter.is_active == 'true'  %}selected{% endif %}>Activo</option>
+        <option value="false" {% if filter.is_active == 'false' %}selected{% endif %}>Inactivo</option>
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">
+        <i class="bi bi-search"></i> Buscar
+      </button>
+      {% if has_active_filters %}
+      <a href="{% url 'security:user_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-4">
+        Limpiar
+      </a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+  {% if perms.security.export_pdf %}
+  <a href="?{{ query_string }}&export=pdf" class="btn-pdf">
+    <i class="fas fa-file-pdf"></i> Exportar PDF
+  </a>
+  {% endif %}
+  {% if perms.security.export_excel %}
+  <a href="?{{ query_string }}&export=excel" class="btn-excel">
+    <i class="fas fa-file-excel"></i> Exportar Excel
+  </a>
+  {% endif %}
 </div>
 
 <p class="text-muted small">Se encontraron <strong>{{ items|length }}</strong> usuario(s).</p>

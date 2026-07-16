@@ -11,7 +11,7 @@ from .models import Purchase, PurchaseDetail
 from .forms import PurchaseForm, PurchaseDetailFormSet
 from billing.models import Product, Supplier
 from shared.decorators import audit_action, group_required
-from shared.mixins import ExportMixin
+from shared.mixins import ExportMixin, check_export_permission
 from django.db.models import ProtectedError
  
 
@@ -59,6 +59,9 @@ def purchase_list(request):
 
     export_format = p.get('export')
     if export_format in ['excel', 'pdf']:
+        redirect_response = check_export_permission(request, export_format)
+        if redirect_response:
+            return redirect_response
         helper = PurchaseExportHelper()
         helper.request = request
         fields = helper.get_export_fields()

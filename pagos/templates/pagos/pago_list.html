@@ -23,6 +23,12 @@
   .btn-del:hover { background: #fecaca; }
   .btn-pay { background: #ecfdf5; color: #047857; border: 1px solid #86efac; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; text-decoration: none; display: inline-block; }
   .btn-pay:hover { background: #d1fae5; }
+  .filter-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6b7280; margin-bottom: 5px; }
+  .form-control-sm { border-radius: 8px; border: 1px solid #dce2ea; font-size: .84rem; padding: 6px 10px; }
+  .btn-pdf   { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; transition: all .2s; }
+  .btn-pdf:hover   { background: #dbeafe; color: #1e40af; }
+  .btn-excel { background: #ecfdf5; color: #047857; border: 1px solid #86efac; border-radius: 10px; font-size: .82rem; font-weight: 700; padding: 7px 16px; transition: all .2s; }
+  .btn-excel:hover { background: #d1fae5; color: #065f46; }
 </style>
 
 <div class="container-fluid py-4">
@@ -63,6 +69,42 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="glass-card p-4 mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label for="f-fecha-min" class="filter-label">Desde</label>
+        <input type="date" id="f-fecha-min" name="fecha_min" class="form-control form-control-sm" value="{{ filter.fecha_min|default_if_none:'' }}">
+      </div>
+      <div class="col-md-4">
+        <label for="f-fecha-max" class="filter-label">Hasta</label>
+        <input type="date" id="f-fecha-max" name="fecha_max" class="form-control form-control-sm" value="{{ filter.fecha_max|default_if_none:'' }}">
+      </div>
+      <div class="col-md-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">
+          <i class="bi bi-search"></i> Buscar
+        </button>
+        {% if has_active_filters %}
+        <a href="{% url 'pagos:pago_list' compra.id %}" class="btn btn-sm btn-outline-secondary rounded-pill px-4">
+          Limpiar
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+    {% if perms.security.export_pdf %}
+    <a href="?{{ query_string }}&export=pdf" class="btn-pdf">
+      <i class="fas fa-file-pdf"></i> Exportar PDF
+    </a>
+    {% endif %}
+    {% if perms.security.export_excel %}
+    <a href="?{{ query_string }}&export=excel" class="btn-excel">
+      <i class="fas fa-file-excel"></i> Exportar Excel
+    </a>
+    {% endif %}
   </div>
 
   <div class="products-table">

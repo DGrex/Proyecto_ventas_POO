@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
-from shared.mixins import GroupRequiredMixin, StaffRequiredMixin, PermissionOrRedirectMixin
+from shared.mixins import GroupRequiredMixin, StaffRequiredMixin, PermissionOrRedirectMixin, ExportMixin
 from shared.decorators import audit_action, group_required
 from shared.notifications import (
     generate_cobro_receipt_pdf, send_cobro_receipt_email, send_cobro_whatsapp
@@ -29,13 +29,22 @@ from django.utils import timezone
 
 # 1) Lista de facturas a crédito (por defecto muestra PENDIENTE, con filtro de estado)
 @method_decorator(audit_action('LIST_FACTURAS_PENDIENTES'), name='dispatch')
-class FacturaPendienteListView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedirectMixin, ListView):
+class FacturaPendienteListView(LoginRequiredMixin, ExportMixin, GroupRequiredMixin, PermissionOrRedirectMixin, ListView):
     permission_required = 'billing.view_invoice'
     group_required = ['Administrador', 'Vendedor']
     model = Invoice
     template_name = 'cobros/factura_pendiente_list.html'
     context_object_name = 'facturas'
     paginate_by = 10
+    export_filename = 'facturas_pendientes'
+    export_fields = [
+        ('id', 'ID'),
+        ('customer.full_name', 'Cliente'),
+        ('invoice_date', 'Fecha de Factura'),
+        ('total', 'Total'),
+        ('saldo', 'Saldo Pendiente'),
+        ('estado', 'Estado'),
+    ]
 
     def get_queryset(self):
         qs = Invoice.objects.filter(tipo_pago='credito').select_related('customer')
@@ -112,24 +121,43 @@ class CobroCreateView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedire
 
 # 3) Historial de pagos de una factura
 @method_decorator(audit_action('LIST_COBROS'), name='dispatch')
-class CobroListView(LoginRequiredMixin, GroupRequiredMixin, PermissionOrRedirectMixin, ListView):
+class CobroListView(LoginRequiredMixin, ExportMixin, GroupRequiredMixin, PermissionOrRedirectMixin, ListView):
     permission_required = 'cobros.view_cobrofactura'
     group_required = ['Administrador', 'Vendedor']
     model = CobroFactura
     template_name = 'cobros/cobro_list.html'
     context_object_name = 'cobros'
     paginate_by = 10
+    export_filename = 'historial_cobros'
+    export_fields = [
+        ('fecha', 'Fecha de Pago'),
+        ('valor', 'Valor Abonado'),
+        ('metodo_pago', 'Método de Pago'),
+        ('referencia_externa', 'Referencia Externa'),
+        ('observacion', 'Observación'),
+    ]
 
     def dispatch(self, request, *args, **kwargs):
         self.factura = get_object_or_404(Invoice, pk=kwargs['factura_id'])
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return CobroFactura.objects.filter(factura=self.factura)
+        qs = CobroFactura.objects.filter(factura=self.factura)
+        p = self.request.GET
+        if p.get('metodo_pago'):
+            qs = qs.filter(metodo_pago=p['metodo_pago'])
+        if p.get('fecha_min'):
+            qs = qs.filter(fecha__gte=p['fecha_min'])
+        if p.get('fecha_max'):
+            qs = qs.filter(fecha__lte=p['fecha_max'])
+        return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['factura'] = self.factura
+        ctx['filter'] = self.request.GET
+        filter_keys = ['metodo_pago', 'fecha_min', 'fecha_max']
+        ctx['has_active_filters'] = any(self.request.GET.get(k) for k in filter_keys)
         return ctx
 
 

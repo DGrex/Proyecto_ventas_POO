@@ -198,12 +198,16 @@
 </div>
 
 <div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+  {% if perms.security.export_pdf %}
   <a href="?{{ query_string }}&export=pdf" class="btn-pdf">
     <i class="fas fa-file-pdf"></i> Exportar PDF
   </a>
+  {% endif %}
+  {% if perms.security.export_excel %}
   <a href="?{{ query_string }}&export=excel" class="btn-excel">
     <i class="fas fa-file-excel"></i> Exportar Excel
   </a>
+  {% endif %}
 </div>
 
 {# ── RESUMEN DE RESULTADOS ────────────────────────────────────── #}

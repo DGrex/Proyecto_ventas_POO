@@ -1,72 +1,131 @@
 {% extends 'billing/base.html' %} {% block title %}{{
 object|default_if_none:"Nuevo Rol" }}{% endblock %} {% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  .perm-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 6px;
-    border-radius: 12px;
-    padding: 14px;
-    background: #f8fafc;
-  }
-  .perm-groups-container {
-  max-height: 480px;
-  overflow-y: auto;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 14px;
-  background: #f8fafc;
-}
-.perm-group-title {
-  font-size: .78rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  color: #1d4ed8;
-  margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 2px solid #dbeafe;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.perm-group-count {
-  margin-left: auto;
-  background: #dbeafe;
-  color: #1d4ed8;
-  font-size: .68rem;
-  font-weight: 700;
-  border-radius: 50px;
-  padding: 1px 8px;
-}
-.perm-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 6px;
-  margin-bottom: 4px;
-}
-  .perm-item {
-    background: #fff;
-    border: 1px solid #eef1f6;
-    border-radius: 8px;
-    padding: 7px 10px;
-    font-size: 0.82rem;
+  .premium-card { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+  /* ── Buscador ─────────────────────────────────────────────── */
+  .perm-toolbar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
   }
-  .perm-item input[type="checkbox"] {
-    cursor: pointer;
+  .perm-search-wrap { position: relative; max-width: 320px; flex: 1 1 260px; }
+  .perm-search-wrap i {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: #9ca3af; font-size: .85rem;
   }
-  .perm-item label {
-    cursor: pointer;
-    margin: 0;
-    color: #374151;
+  #permSearch {
+    width: 100%; border-radius: 10px; border: 1px solid #dce2ea;
+    font-size: .85rem; padding: 8px 12px 8px 34px;
   }
+  #permSearch:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  #permSummary { font-size: .8rem; color: #6b7280; white-space: nowrap; }
+
+  /* ── Contenedor general ───────────────────────────────────── */
+  .perm-sections {
+    max-height: 560px;
+    overflow-y: auto;
+    padding: 4px 4px 4px 0;
+  }
+
+  /* ── Tarjeta por módulo ───────────────────────────────────── */
+  .perm-section {
+    background: #fff;
+    border: 1px solid #eef1f6;
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .perm-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: #f8fafc;
+    border-bottom: 1px solid #eef1f6;
+    padding: 12px 16px;
+  }
+  .perm-section-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: #eff6ff; color: #1d4ed8;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .perm-section-title { font-weight: 800; font-size: .92rem; color: #1e293b; }
+  .perm-section-desc { font-size: .76rem; color: #6b7280; margin-top: 1px; }
+  .perm-group-count {
+    background: #dbeafe; color: #1d4ed8; font-size: .68rem; font-weight: 700;
+    border-radius: 50px; padding: 2px 10px; white-space: nowrap;
+  }
+  .perm-quick-actions { display: flex; align-items: center; gap: 2px; }
+  .perm-quick-btn {
+    background: none; border: none; font-size: .74rem; font-weight: 700;
+    padding: 3px 8px; border-radius: 6px; cursor: pointer; text-decoration: none;
+  }
+  .perm-quick-btn.select-all { color: #1d4ed8; }
+  .perm-quick-btn.select-all:hover { background: #eff6ff; }
+  .perm-quick-btn.select-none { color: #b91c1c; }
+  .perm-quick-btn.select-none:hover { background: #fee2e2; }
+
+  /* ── Matriz Recurso x Acción ──────────────────────────────── */
+  .perm-matrix-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .perm-matrix-table thead th {
+    font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .4px;
+    color: #6c757d; padding: 8px 10px; border-bottom: 2px solid #eef1f6; text-align: center;
+    white-space: nowrap;
+  }
+  .perm-matrix-table thead th.perm-model-col { text-align: left; padding-left: 16px; }
+  .perm-matrix-table thead th i { margin-right: 4px; }
+  .perm-matrix-table thead th.perm-col-view   i { color: #1d4ed8; }
+  .perm-matrix-table thead th.perm-col-add    i { color: #047857; }
+  .perm-matrix-table thead th.perm-col-change i { color: #b45309; }
+  .perm-matrix-table thead th.perm-col-delete i { color: #b91c1c; }
+  .perm-matrix-table thead th.perm-col-view,
+  .perm-matrix-table thead th.perm-col-add,
+  .perm-matrix-table thead th.perm-col-change,
+  .perm-matrix-table thead th.perm-col-delete { cursor: pointer; user-select: none; }
+  .perm-matrix-table thead th.perm-col-view:hover,
+  .perm-matrix-table thead th.perm-col-add:hover,
+  .perm-matrix-table thead th.perm-col-change:hover,
+  .perm-matrix-table thead th.perm-col-delete:hover { background: #f1f5f9; }
+
+  .perm-matrix-table tbody tr { border-bottom: 1px solid #f2f4f7; }
+  .perm-matrix-table tbody tr:last-child { border-bottom: none; }
+  .perm-matrix-table tbody tr:hover { background: #fafbfc; }
+  .perm-matrix-table td { padding: 8px 10px; vertical-align: middle; }
+  .perm-model-col { padding-left: 16px !important; min-width: 220px; }
+  .perm-model-col .perm-model-name { font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 6px; }
+  .perm-model-col .perm-model-name i { color: #94a3b8; font-size: .82rem; }
+  .perm-model-col .perm-hint { font-size: .72rem; color: #9ca3af; margin-left: 20px; margin-top: 1px; }
+  .perm-action-col { text-align: center; width: 90px; }
+  .perm-action-col input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+  .perm-action-col.perm-col-view   input { accent-color: #1d4ed8; }
+  .perm-action-col.perm-col-add    input { accent-color: #047857; }
+  .perm-action-col.perm-col-change input { accent-color: #b45309; }
+  .perm-action-col.perm-col-delete input { accent-color: #b91c1c; }
+
+  /* ── Permisos especiales (no CRUD) ────────────────────────── */
+  .perm-extra-list { padding: 10px 16px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+  .perm-extra-list.with-border { border-top: 1px dashed #eef1f6; }
+  .perm-item {
+    background: #f8fafc; border: 1px solid #eef1f6; border-radius: 8px;
+    padding: 8px 12px; font-size: .82rem; display: flex; align-items: center; gap: 8px;
+  }
+  .perm-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #7c3aed; }
+  .perm-item label { cursor: pointer; margin: 0; color: #374151; display: flex; align-items: center; gap: 6px; }
+  .perm-item label i { color: #7c3aed; }
+
+  .perm-row-hidden { display: none !important; }
+  .perm-section-hidden { display: none !important; }
 </style>
 
 <div class="row justify-content-center">
-  <div class="col-xl-8 col-lg-9">
+  <div class="col-xl-9 col-lg-10">
     <div class="premium-card">
       <div
         class="premium-card-header d-flex justify-content-between align-items-center text-white"
@@ -121,35 +180,91 @@ object|default_if_none:"Nuevo Rol" }}{% endblock %} {% block content %}
           >
             <i class="bi bi-key-fill me-1"></i> Permisos Asignados
           </p>
+
           <div class="mb-4">
-            <div class="perm-groups-container">
-              {% for group_label, checkboxes in grouped_permissions.items %}
-              <div class="perm-group mb-3">
-                <div class="perm-group-title">
-                  <i class="bi bi-folder-fill me-1"></i>{{ group_label }}
-                  <span class="perm-group-count">{{ checkboxes|length }}</span>
+            <div class="perm-toolbar">
+              <div class="perm-search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" id="permSearch" placeholder="Buscar un recurso… (ej: facturas, productos)">
+              </div>
+              <div id="permSummary"></div>
+            </div>
+
+            <div class="perm-sections">
+              {% for section in permission_matrix %}
+              <div class="perm-section" data-section-name="{{ section.label|lower }}">
+                <div class="perm-section-header">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="perm-section-icon"><i class="bi {{ section.icon }}"></i></span>
+                    <div>
+                      <div class="perm-section-title">{{ section.label }}</div>
+                      {% if section.description %}<div class="perm-section-desc">{{ section.description }}</div>{% endif %}
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="perm-group-count">{{ section.count }} permiso{{ section.count|pluralize }}</span>
+                    <div class="perm-quick-actions">
+                      <button type="button" class="perm-quick-btn select-all" data-action="all">Marcar todo</button>
+                      <span class="text-muted">·</span>
+                      <button type="button" class="perm-quick-btn select-none" data-action="none">Ninguno</button>
+                    </div>
+                  </div>
                 </div>
-                <div class="perm-grid">
-                  {% for checkbox in checkboxes %}
-                  <div class="perm-item">
-                    {{ checkbox.tag }}
-                    <label for="{{ checkbox.id_for_label }}"
-                      >{{ checkbox.choice_label }}</label
-                    >
+
+                {% if section.models %}
+                <div class="table-responsive">
+                  <table class="perm-matrix-table">
+                    <thead>
+                      <tr>
+                        <th class="perm-model-col">Recurso</th>
+                        <th class="perm-action-col perm-col-view" data-col="view" title="Marcar/desmarcar toda la columna Ver"><i class="bi bi-eye-fill"></i>Ver</th>
+                        <th class="perm-action-col perm-col-add" data-col="add" title="Marcar/desmarcar toda la columna Crear"><i class="bi bi-plus-lg"></i>Crear</th>
+                        <th class="perm-action-col perm-col-change" data-col="change" title="Marcar/desmarcar toda la columna Editar"><i class="bi bi-pencil-fill"></i>Editar</th>
+                        <th class="perm-action-col perm-col-delete" data-col="delete" title="Marcar/desmarcar toda la columna Eliminar"><i class="bi bi-trash-fill"></i>Eliminar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for m in section.models %}
+                      <tr data-row-name="{{ m.label|lower }}">
+                        <td class="perm-model-col">
+                          <div class="perm-model-name"><i class="bi {{ m.icon }}"></i>{{ m.label }}</div>
+                          {% if m.hint %}<div class="perm-hint">{{ m.hint }}</div>{% endif %}
+                        </td>
+                        <td class="perm-action-col perm-col-view">{% if m.actions.view %}{{ m.actions.view.tag }}{% endif %}</td>
+                        <td class="perm-action-col perm-col-add">{% if m.actions.add %}{{ m.actions.add.tag }}{% endif %}</td>
+                        <td class="perm-action-col perm-col-change">{% if m.actions.change %}{{ m.actions.change.tag }}{% endif %}</td>
+                        <td class="perm-action-col perm-col-delete">{% if m.actions.delete %}{{ m.actions.delete.tag }}{% endif %}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% endif %}
+
+                {% if section.extra %}
+                <div class="perm-extra-list {% if section.models %}with-border{% endif %}">
+                  {% for entry in section.extra %}
+                  <div class="perm-item" data-row-name="{{ entry.checkbox.choice_label|lower }}">
+                    {{ entry.checkbox.tag }}
+                    <label for="{{ entry.checkbox.id_for_label }}">
+                      <i class="bi {{ entry.icon }}"></i>{{ entry.checkbox.choice_label }}
+                    </label>
                   </div>
                   {% endfor %}
                 </div>
+                {% endif %}
               </div>
               {% empty %}
               <p class="text-muted small mb-0">No hay permisos disponibles.</p>
               {% endfor %}
             </div>
+
             {% for error in form.permissions.errors %}
             <div class="text-danger small mt-1">{{ error }}</div>
             {% endfor %}
             <div class="form-text text-muted small mt-2">
-              Los cambios aquí se aplican automáticamente a todos los usuarios
-              que tengan este rol.
+              <i class="bi bi-info-circle me-1"></i>Los cambios aquí se aplican automáticamente a todos los usuarios
+              que tengan este rol. Los botones y opciones del menú se muestran u ocultan según estos permisos.
             </div>
           </div>
 
@@ -168,4 +283,66 @@ object|default_if_none:"Nuevo Rol" }}{% endblock %} {% block content %}
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const sections = document.querySelectorAll('.perm-section');
+  const searchInput = document.getElementById('permSearch');
+  const summary = document.getElementById('permSummary');
+
+  function updateSummary() {
+    const total = document.querySelectorAll('.perm-section input[type="checkbox"]').length;
+    const checked = document.querySelectorAll('.perm-section input[type="checkbox"]:checked').length;
+    if (summary) summary.textContent = checked + ' de ' + total + ' permisos seleccionados';
+  }
+
+  // Buscador: filtra filas de la matriz y permisos extra por nombre de recurso
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      const term = searchInput.value.trim().toLowerCase();
+      sections.forEach(function (section) {
+        let visibleRows = 0;
+        section.querySelectorAll('[data-row-name]').forEach(function (row) {
+          const match = !term || row.getAttribute('data-row-name').indexOf(term) !== -1;
+          row.classList.toggle('perm-row-hidden', !match);
+          if (match) visibleRows++;
+        });
+        const sectionMatches = !term || section.getAttribute('data-section-name').indexOf(term) !== -1;
+        section.classList.toggle('perm-section-hidden', !sectionMatches && visibleRows === 0);
+      });
+    });
+  }
+
+  // Botones "Marcar todo" / "Ninguno" por módulo
+  sections.forEach(function (section) {
+    section.querySelectorAll('.perm-quick-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const checkAll = btn.dataset.action === 'all';
+        section.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+          cb.checked = checkAll;
+        });
+        updateSummary();
+      });
+    });
+
+    // Encabezados de columna: marcar/desmarcar toda la columna dentro del módulo
+    section.querySelectorAll('thead th[data-col]').forEach(function (th) {
+      th.addEventListener('click', function () {
+        const col = th.dataset.col;
+        const boxes = section.querySelectorAll('td.perm-col-' + col + ' input[type="checkbox"]');
+        const allChecked = Array.from(boxes).every(function (cb) { return cb.checked; });
+        boxes.forEach(function (cb) { cb.checked = !allChecked; });
+        updateSummary();
+      });
+    });
+  });
+
+  document.querySelectorAll('.perm-section input[type="checkbox"]').forEach(function (cb) {
+    cb.addEventListener('change', updateSummary);
+  });
+
+  updateSummary();
+});
+</script>
+
 {% endblock %}

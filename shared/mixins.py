@@ -38,6 +38,24 @@ class StaffRequiredMixin:
         return redirect(self.staff_redirect_url)
 
 
+def check_export_permission(request, export_format):
+    """
+    Verifica si el usuario tiene el permiso global requerido para exportar
+    (security.export_pdf / security.export_excel). Si no lo tiene, muestra un
+    mensaje de error y retorna una redirección; si lo tiene, retorna None.
+
+    Uso en vistas basadas en función (FBV) que exportan manualmente:
+        redirect_response = check_export_permission(request, export_format)
+        if redirect_response:
+            return redirect_response
+    """
+    required_perm = 'security.export_pdf' if export_format == 'pdf' else 'security.export_excel'
+    if not request.user.has_perm(required_perm):
+        messages.error(request, 'No tiene permiso para exportar este reporte.')
+        return redirect(request.path)
+    return None
+
+
 class ExportMixin:
     """
     Mixin genérico para vistas ListView que permite la exportación del QuerySet filtrado
@@ -111,6 +129,10 @@ class ExportMixin:
     def get(self, request, *args, **kwargs):
         export_format = request.GET.get('export')
         if export_format in ['excel', 'pdf']:
+            redirect_response = check_export_permission(request, export_format)
+            if redirect_response:
+                return redirect_response
+
             # Ejecutamos el queryset con todos los filtros actuales (sin paginar)
             self.object_list = self.get_queryset()
             fields = self.get_export_fields()
