@@ -94,7 +94,7 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold text-dark mb-0">Detalles de la Factura</h5>
             <button type="button" class="btn btn-outline-primary btn-sm px-3 rounded" id="btn-add-row">
-              <i class="bi bi-plus-lg"></i> Add product
+              <i class="bi bi-plus-lg"></i> Agregar producto
             </button>
           </div>
 
@@ -104,11 +104,11 @@
             <table class="table table-bordered align-middle details-table" id="details-table">
               <thead>
                 <tr>
-                  <th style="width: 45%;">Product</th>
-                  <th style="width: 15%;" class="text-center">Quantity</th>
-                  <th style="width: 15%;" class="text-end">Unit Price</th>
+                  <th style="width: 45%;">Producto</th>
+                  <th style="width: 15%;" class="text-center">Cantidad</th>
+                  <th style="width: 15%;" class="text-end">Precio Unitario</th>
                   <th style="width: 15%;" class="text-end">Subtotal</th>
-                  <th style="width: 10%;" class="text-center">Delete</th>
+                  <th style="width: 10%;" class="text-center">Eliminar</th>
                 </tr>
               </thead>
               <tbody id="details-tbody">
@@ -124,11 +124,7 @@
                     {{ formset.empty_form.quantity }}
                   </td>
                   <td>
-                    <div class="input-group">
-                      <span class="input-group-text bg-light border-2 border-end-0"
-                        style="border-radius: 10px 0 0 10px;">$</span>
-                      {{ formset.empty_form.unit_price }}
-                    </div>
+                    {{ formset.empty_form.unit_price }}
                   </td>
                   <td class="text-end fw-semibold row-subtotal-display" style="padding-right: 1.5rem;">$0.00</td>
                   <td class="text-center">
@@ -165,11 +161,7 @@
                     {% endif %}
                   </td>
                   <td>
-                    <div class="input-group">
-                      <span class="input-group-text bg-light border-2 border-end-0"
-                        style="border-radius: 10px 0 0 10px;">$</span>
-                      {{ detail_form.unit_price }}
-                    </div>
+                    {{ detail_form.unit_price }}
                     {% if detail_form.unit_price.errors %}
                     <div class="invalid-feedback d-block">
                       {% for error in detail_form.unit_price.errors %}{{ error }}{% endfor %}
@@ -217,7 +209,7 @@
               </button>
               <a href="{% url 'billing:invoice_list' %}"
                 class="btn btn-premium-cancel d-flex align-items-center justify-content-center">
-                Cancel
+                Cancelar
               </a>
             </div>
           </div>
