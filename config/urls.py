@@ -33,6 +33,7 @@ urlpatterns = [
     path('pagos/', include('pagos.urls')),
     path('', include('billing.urls')),
     path('purchases/', include('purchasing.urls')),
+    path('rrhh/', include('rrhh.urls')),
 ]
 
 if settings.DEBUG:

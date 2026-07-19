@@ -1,0 +1,141 @@
+{% extends 'billing/base.html' %}
+{% block title %}Préstamos{% endblock %}
+
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1><span class="header-icon"><i class="bi bi-cash-coin"></i></span>Préstamos</h1>
+    <p>Préstamos otorgados a los empleados</p>
+  </div>
+  <a href="{% url 'rrhh:prestamo_create' %}" class="btn btn-light fw-bold rounded-pill px-4 shadow-sm text-primary">
+    <i class="bi bi-plus-lg me-1"></i> Nuevo Préstamo
+  </a>
+</div>
+
+{# ── PANEL DE FILTROS ─────────────────────────────────────────── #}
+<div class="glass-card p-4 mb-4">
+  <form method="get" class="row g-3 align-items-end">
+    <div class="col-md-3">
+      <label for="f-empleado" class="filter-label">Empleado</label>
+      <select id="f-empleado" name="empleado" class="form-select form-select-sm">
+        <option value="">— Todos —</option>
+        {% for e in empleados_catalog %}
+        <option value="{{ e.id }}" {% if filter.empleado == e.id|stringformat:"s" %}selected{% endif %}>{{ e.nombres }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label for="f-tipo" class="filter-label">Tipo de préstamo</label>
+      <select id="f-tipo" name="tipo_prestamo" class="form-select form-select-sm">
+        <option value="">— Todos —</option>
+        {% for t in tipos_prestamo_catalog %}
+        <option value="{{ t.id }}" {% if filter.tipo_prestamo == t.id|stringformat:"s" %}selected{% endif %}>{{ t.descripcion }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label for="f-estado" class="filter-label">Estado</label>
+      <select id="f-estado" name="estado" class="form-select form-select-sm">
+        <option value="">— Todos —</option>
+        {% for valor, etiqueta in estados_catalog %}
+        <option value="{{ valor }}" {% if filter.estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label for="f-fecha-min" class="filter-label">Desde</label>
+      <input type="date" id="f-fecha-min" name="fecha_min" class="form-control form-control-sm" value="{{ filter.fecha_min|default_if_none:'' }}">
+    </div>
+    <div class="col-md-2">
+      <label for="f-fecha-max" class="filter-label">Hasta</label>
+      <input type="date" id="f-fecha-max" name="fecha_max" class="form-control form-control-sm" value="{{ filter.fecha_max|default_if_none:'' }}">
+    </div>
+    <div class="col-12 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">
+        <i class="bi bi-search"></i> Buscar
+      </button>
+      {% if has_active_filters %}
+      <a href="{% url 'rrhh:prestamo_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-4">
+        Limpiar
+      </a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+  {% if perms.security.export_pdf %}
+  <a href="?{{ query_string }}&export=pdf" class="btn-pdf">
+    <i class="bi bi-file-earmark-pdf-fill"></i> Exportar PDF
+  </a>
+  {% endif %}
+  {% if perms.security.export_excel %}
+  <a href="?{{ query_string }}&export=excel" class="btn-excel">
+    <i class="bi bi-file-earmark-excel-fill"></i> Exportar Excel
+  </a>
+  {% endif %}
+</div>
+
+<div class="glass-card p-4">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Empleado</th>
+          <th>Tipo</th>
+          <th>Fecha</th>
+          <th>Monto</th>
+          <th>Interés</th>
+          <th>Total a pagar</th>
+          <th>Cuotas</th>
+          <th>Saldo</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for prestamo in prestamos %}
+        <tr>
+          <td>{{ prestamo.id }}</td>
+          <td>{{ prestamo.empleado }}</td>
+          <td>{{ prestamo.tipo_prestamo }}</td>
+          <td>{{ prestamo.fecha_prestamo }}</td>
+          <td>${{ prestamo.monto }}</td>
+          <td>${{ prestamo.interes }}</td>
+          <td>${{ prestamo.monto_pagar }}</td>
+          <td>{{ prestamo.numero_cuotas }}</td>
+          <td>${{ prestamo.saldo }}</td>
+          <td>
+            {% if prestamo.estado == 'PAG' %}
+              <span class="badge bg-success">Pagado</span>
+            {% elif prestamo.estado == 'ANU' %}
+              <span class="badge bg-secondary">Anulado</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Pendiente</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{% url 'rrhh:prestamo_detail' prestamo.pk %}" class="btn btn-sm btn-outline-primary" title="Ver detalle">
+              <i class="bi bi-eye"></i>
+            </a>
+            <a href="{% url 'rrhh:prestamo_update' prestamo.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <a href="{% url 'rrhh:prestamo_delete' prestamo.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar">
+              <i class="bi bi-trash"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="11" class="text-center text-muted py-4">No hay préstamos registrados todavía.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

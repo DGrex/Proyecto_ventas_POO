@@ -523,6 +523,11 @@
           {% endif %}
           {% endif %}
 
+          <!-- RR.HH.: Préstamos a empleados (por ahora solo Administrador) -->
+          {% if user|has_group:'Administrador' and perms.rrhh.view_prestamo %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'rrhh:prestamo_list' %}"><i class="bi bi-cash-coin me-1"></i>Préstamos</a></li>
+          {% endif %}
+
           <!-- SEGURIDAD: solo Administrador, cada enlace según su permiso real -->
           {% if user|has_group:'Administrador' and perms.auth %}
           <li class="nav-item dropdown">

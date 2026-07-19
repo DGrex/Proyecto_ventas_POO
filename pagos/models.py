@@ -19,7 +19,7 @@ class PagoCompra(models.Model):
     class Meta:
         verbose_name = 'Pago de Compra'
         verbose_name_plural = 'Pagos de Compras'
-        ordering = ['-fecha', '-id']
+        ordering = ['-fecha', '-id']    
 
     def __str__(self):
         return f'Pago ${self.valor} - Compra #{self.compra_id}'

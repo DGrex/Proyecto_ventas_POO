@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'security',
     'cobros',
     'pagos',
+    'rrhh',
 ]
 
 
